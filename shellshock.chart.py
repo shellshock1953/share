@@ -3,6 +3,8 @@
 
 
 from base import SimpleService
+# from python_modules.base import SimpleService
+
 import json
 try:
     import urllib.request as urllib2
@@ -23,10 +25,10 @@ CHARTS = {
             ['delete_queries', 'DELETE', 'incremental', 1, 1],
             ['get_queries', 'GET', 'incremental', 1, 1],
             ['head_queries', 'HEAD', 'incremental', 1, 1],
-            ['post_queries', 'POST', 'incremental', 1, 1]
+            ['post_queries', 'POST', 'incremental', 1, 1],
             ['put_queries', 'PUT', 'incremental', 1, 1]
         ]
-    }
+    },
     'status_codes_queries': {
         'options': [None, 'Status codes queries', 'requests', 'Request',
                     '', 'stacked'],
@@ -35,7 +37,6 @@ CHARTS = {
             ['201_queries', '201', 'incremental', 1, 1],
             ['202_queries', '202', 'incremental', 1, 1],
             ['301_queries', '301', 'incremental', 1, 1],
-            ['302_queries', '302', 'incremental', 1, 1],
             ['304_queries', '304', 'incremental', 1, 1],
             ['400_queries', '400', 'incremental', 1, 1],
             ['401_queries', '401', 'incremental', 1, 1],
@@ -49,6 +50,7 @@ CHARTS = {
             ['409_queries', '409', 'incremental', 1, 1],
             ['409_queries', '409', 'incremental', 1, 1],
             ['412_queries', '412', 'incremental', 1, 1]
+        ]
     }
 }
 
@@ -73,7 +75,6 @@ class Service(SimpleService):
             '201_queries': 0,
             '202_queries': 0,
             '301_queries': 0,
-            '302_queries': 0,
             '304_queries': 0,
             '400_queries': 0,
             '401_queries': 0,
@@ -88,6 +89,7 @@ class Service(SimpleService):
     def _get_data(self):
         try:
             response = urllib2.urlopen(self.couch_url).read()
+            
 
             httpd = json.loads(response)['httpd_request_methods']
             self.data['copy_queries'] = httpd['GET']['current']
@@ -102,7 +104,6 @@ class Service(SimpleService):
             self.data['201_queries'] = status['201']['current']
             self.data['202_queries'] = status['202']['current']
             self.data['301_queries'] = status['301']['current']
-            self.data['302_queries'] = status['302']['current']
             self.data['304_queries'] = status['304']['current']
             self.data['400_queries'] = status['400']['current']
             self.data['401_queries'] = status['401']['current']
@@ -118,8 +119,14 @@ class Service(SimpleService):
 
             # replace CouchDB 'null' values with zero
             for key in self.data:
-                if self.data[key] == 'null':
+                if self.data[key] == None:
                     self.data[key] = 0
         except (ValueError, AttributeError):
             return self.data
         return self.data
+
+# if __name__ == '__main__':
+    # import pdb
+    # pdb.set_trace()
+ #   g = Service({'priority':6000,'retries':60,'update_every':1,'couch_url':'http://0.0.0.0:5984/_stats'})
+ #   print(g._get_data())
