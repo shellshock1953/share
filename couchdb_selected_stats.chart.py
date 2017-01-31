@@ -3,6 +3,7 @@
 
 
 from base import SimpleService
+#from python_modules.base import SimpleService
 
 import json
 try:
@@ -14,9 +15,41 @@ priority = 70000
 retries = 60
 update_every = 1
 
-ORDER = ['httpd_queries', 'status_codes_queries']
+ORDER = ['httpd_queries_absolute', 'status_codes_queries_absolute',
+         'httpd_queries_incremental', 'status_codes_queries_incremental']
 CHARTS = {
-    'httpd_queries': {
+    'httpd_queries_absolute': {
+        'options': [None, 'Http queries', 'requests', '',
+                    '', 'stacked'],
+        'lines': [
+            ['copy_queries', 'COPY', 'absolute', 1, 1],
+            ['delete_queries', 'DELETE', 'absolute', 1, 1],
+            ['get_queries', 'GET', 'absolute', 1, 1],
+            ['head_queries', 'HEAD', 'absolute', 1, 1],
+            ['post_queries', 'POST', 'absolute', 1, 1],
+            ['put_queries', 'PUT', 'absolute', 1, 1]
+        ]
+    },
+    'status_codes_queries_absolute': {
+        'options': [None, 'Status codes queries', 'requests', '',
+                    '', 'stacked'],
+        'lines': [
+            ['200_queries', '200', 'absolute', 1, 1],
+            ['201_queries', '201', 'absolute', 1, 1],
+            ['202_queries', '202', 'absolute', 1, 1],
+            ['301_queries', '301', 'absolute', 1, 1],
+            ['304_queries', '304', 'absolute', 1, 1],
+            ['400_queries', '400', 'absolute', 1, 1],
+            ['401_queries', '401', 'absolute', 1, 1],
+            ['403_queries', '403', 'absolute', 1, 1],
+            ['404_queries', '404', 'absolute', 1, 1],
+            ['405_queries', '405', 'absolute', 1, 1],
+            ['409_queries', '409', 'absolute', 1, 1],
+            ['412_queries', '412', 'absolute', 1, 1],
+            ['500_queries', '500', 'absolute', 1, 1]
+        ]
+    },
+    'httpd_queries_incremental': {
         'options': [None, 'Http queries', 'requests', '',
                     '', 'stacked'],
         'lines': [
@@ -28,14 +61,23 @@ CHARTS = {
             ['put_queries', 'PUT', 'incremental', 1, 1]
         ]
     },
-    'status_codes_queries': {
+    'status_codes_queries_incremental': {
         'options': [None, 'Status codes queries', 'requests', '',
                     '', 'stacked'],
         'lines': [
-            ['2xx_queries', '2xx', 'incremental', 1, 1],
-            ['3xx_queries', '3xx', 'incremental', 1, 1],
-            ['4xx_queries', '4xx', 'incremental', 1, 1],
-            ['5xx_queries', '5xx', 'incremental', 1, 1]
+            ['200_queries', '200', 'incremental', 1, 1],
+            ['201_queries', '201', 'incremental', 1, 1],
+            ['202_queries', '202', 'incremental', 1, 1],
+            ['301_queries', '301', 'incremental', 1, 1],
+            ['304_queries', '304', 'incremental', 1, 1],
+            ['400_queries', '400', 'incremental', 1, 1],
+            ['401_queries', '401', 'incremental', 1, 1],
+            ['403_queries', '403', 'incremental', 1, 1],
+            ['404_queries', '404', 'incremental', 1, 1],
+            ['405_queries', '405', 'incremental', 1, 1],
+            ['409_queries', '409', 'incremental', 1, 1],
+            ['412_queries', '412', 'incremental', 1, 1],
+            ['500_queries', '500', 'incremental', 1, 1]
         ]
     }
 }
@@ -64,54 +106,40 @@ class Service(SimpleService):
         }
 
     def _get_data(self):
-        def sum_and_zero_if_none(*argv):
-            sum = 0
-            for arg in argv:
-                # float for safety"
-                sum += float(arg or 0)
-            return round(sum)
-
         try:
             response = urllib2.urlopen(self.couch_url).read()
 
             httpd = json.loads(response)['httpd_request_methods']
-            self.data['copy_queries'] = httpd['GET']['current']
-            self.data['delete_queries'] = httpd['DELETE']['current']
-            self.data['get_queries'] = httpd['GET']['current']
-            self.data['head_queries'] = httpd['HEAD']['current']
-            self.data['post_queries'] = httpd['POST']['current']
-            self.data['put_queries'] = httpd['PUT']['current']
+            self.data['copy_queries'] = httpd['COPY']['mean']
+            self.data['delete_queries'] = httpd['DELETE']['mean']
+            self.data['get_queries'] = httpd['GET']['mean']
+            self.data['head_queries'] = httpd['HEAD']['mean']
+            self.data['post_queries'] = httpd['POST']['mean']
+            self.data['put_queries'] = httpd['PUT']['mean']
 
             status = json.loads(response)['httpd_status_codes']
-            self.data['2xx_queries'] = sum_and_zero_if_none(
-                status['200']['current'],
-                status['201']['current'],
-                status['202']['current']
-            )
-
-            self.data['3xx_queries'] = sum_and_zero_if_none(
-                status['301']['current'],
-                status['304']['current']
-            )
-
-            self.data['400_queries'] = sum_and_zero_if_none(
-                status['400']['current'],
-                status['401']['current'],
-                status['403']['current'],
-                status['404']['current'],
-                status['405']['current'],
-                status['409']['current'],
-                status['412']['current']
-            )
-
-            self.data['5xx_queries'] = sum_and_zero_if_none(
-                status['500']['current']
-            )
+            self.data['200_queries'] = status['200']['mean']
+            self.data['201_queries'] = status['201']['mean']
+            self.data['202_queries'] = status['202']['mean']
+            self.data['301_queries'] = status['301']['mean']
+            self.data['304_queries'] = status['304']['mean']
+            self.data['400_queries'] = status['400']['mean']
+            self.data['401_queries'] = status['401']['mean']
+            self.data['403_queries'] = status['403']['mean']
+            self.data['404_queries'] = status['404']['mean']
+            self.data['405_queries'] = status['405']['mean']
+            self.data['409_queries'] = status['409']['mean']
+            self.data['412_queries'] = status['412']['mean']
+            self.data['500_queries'] = status['500']['mean']
 
             # replace CouchDB 'null' values with zero
             for key in self.data:
                 if self.data[key] == None:
-                    self.data[key] = 0
+                    self.data[key] = float(1.99)
         except (ValueError, AttributeError):
             return self.data
         return self.data
+
+#s = Service(configuration={ 'update_every':1, 'priority':6000, 'retries':60, 'couch_url':'http://0.0.0.0:5984/_stats' },name=None)
+#d = s._get_data()
+#print d['200_queries']
