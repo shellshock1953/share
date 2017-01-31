@@ -93,16 +93,25 @@ class Service(SimpleService):
         self.order = ORDER
         self.definitions = CHARTS
         self.data = {
-            'copy_queries': 0,
-            'delete_queries':   0,
-            'get_queries':  0,
-            'head_queries': 0,
-            'post_queries': 0,
-            'put_queries':  0,
-            '2xx_queries': 0,
-            '3xx_queries': 0,
-            '4xx_queries': 0,
-            '5xx_queries': 0
+            'copy_queries':0,
+            'delete_queries': 0,
+            'get_queries': 0,
+            'head_queries':0,
+            'post_queries':0,
+            'put_queries': 0,
+            '200_queries': 0,
+            '201_queries': 0,
+            '202_queries': 0,
+            '301_queries': 0,
+            '304_queries': 0,
+            '400_queries': 0,
+            '401_queries': 0,
+            '403_queries': 0,
+            '404_queries': 0,
+            '405_queries': 0,
+            '409_queries': 0,
+            '412_queries': 0,
+            '500_queries': 0
         }
 
     def _get_data(self):
@@ -135,7 +144,7 @@ class Service(SimpleService):
             # replace CouchDB 'null' values with zero
             for key in self.data:
                 if self.data[key] == None:
-                    self.data[key] = float(1.99)
+                    self.data[key] = 0
         except (ValueError, AttributeError):
             return self.data
         return self.data
