@@ -2,6 +2,7 @@
 # Description: CouchDB statistics netdata python.d module
 
 from base import SimpleService
+#from python_modules.base import SimpleService
 
 import json
 
@@ -37,18 +38,14 @@ def parser(doc):
                 elif doc[category][subcategory][item] is None:
                     doc[category][subcategory][item] = 0
 
-                result_dict[category+'_'+subcategory+'_'+item] = \
-                    doc[category][subcategory][item]
-                CHARTS_lines.append(
-                    [item,
-                     item,
-                     'incremental', 1, 1 ]
-                )
+                name = category+'_'+subcategory+'_'+item
+                result_dict[name] = doc[category][subcategory][item]
+                CHARTS_lines.append([name, name, 'incremental', 1, 1 ])
 
-        CHARTS[category] = {
-            'options': [None, description, 'requests', '', '', 'stacked'],
-            'lines': CHARTS_lines
-        }
+            CHARTS[category] = {
+                'options': [None, description, 'requests', '', '', 'stacked'],
+                'lines': CHARTS_lines
+            }
     return ORDER, CHARTS, result_dict
 
 
@@ -57,9 +54,10 @@ class Service(SimpleService):
 
         SimpleService.__init__(self, configuration=configuration, name=name)
 
-        self.couch_url = configuration['couch_url']
-        if len(self.couch_url) == 0:
-            raise Exception('Invalid couch_url')
+        #self.couch_url = configuration['couch_url']
+        #if len(self.couch_url) == 0:
+            #raise Exception('Invalid couch_url')
+        self.couch_url = 'http://0.0.0.0:5984/_stats'
 
         try:
             response = urllib2.urlopen(self.couch_url).read()
@@ -68,7 +66,6 @@ class Service(SimpleService):
             ORDER, CHARTS, DATA = parser(doc)
 
         except (ValueError, AttributeError):
-            print('Error gotted!')
             return None
 
         self.order = ORDER
@@ -76,5 +73,7 @@ class Service(SimpleService):
         self.data = DATA
 
     def _get_data(self):
-        print('Inside _get_data')
         return self.data
+
+#p = Service({'update_every':1, 'priority':100000, 'retries':0}, name=None)
+#p._get_data()
