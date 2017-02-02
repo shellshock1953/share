@@ -64,6 +64,12 @@ class Service(SimpleService):
         }
 
     def _get_data(self):
+        def sum_zero_round(*argv):
+            sum = 0
+            for arg in argv:
+                sum += float(arg or 0)
+            return round(sum)
+
         try:
             response = urllib2.urlopen(self.couch_url).read()
 
@@ -76,22 +82,30 @@ class Service(SimpleService):
             self.data['put_queries'] = httpd['PUT']['current']
 
             status = json.loads(response)['httpd_status_codes']
-            self.data['2xx_queries'] =  status['200']['current'] + \
-                status['201']['current'] + \
+            self.data['2xx_queries'] = sum_zero_round(
+                status['200']['current'],
+                status['201']['current'],
                 status['202']['current']
+            )
 
-            self.data['3xx_queries'] =  status['301']['current'] + \
+            self.data['3xx_queries'] = sum_zero_round(
+                status['301']['current'],
                 status['304']['current']
+            )
 
-            self.data['400_queries'] =  status['400']['current'] + \
-                status['401']['current'] + \
-                status['403']['current'] + \
-                status['404']['current'] + \
-                status['405']['current'] + \
-                status['409']['current'] + \
+            self.data['400_queries'] = sum_zero_round(
+                status['400']['current'],
+                status['401']['current'],
+                status['403']['current'],
+                status['404']['current'],
+                status['405']['current'],
+                status['409']['current'],
                 status['412']['current']
+            )
 
-            self.data['5xx_queries'] = status['500']['current']
+            self.data['5xx_queries'] = sum_zero_round(
+                status['500']['current']
+            )
 
             # replace CouchDB 'null' values with zero
             for key in self.data:
