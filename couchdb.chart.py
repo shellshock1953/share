@@ -67,6 +67,7 @@ class Service(SimpleService):
         def sum_and_zero_if_none(*argv):
             sum = 0
             for arg in argv:
+                # float for safety"
                 sum += float(arg or 0)
             return round(sum)
 
