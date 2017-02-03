@@ -82,11 +82,11 @@ CHARTS = {
         ]
     },
     'database_fragmentation': {
-        'options': [None, 'Database fragmentation', 'G', '',
+        'options': [None, 'Database fragmentation', 'Megabytes', '',
                     '', 'stacked'],
         'lines': [
-            ['data_size', 'data_size', 'absolute', 1, 1],
-            ['disk_size', 'disk_size_overhead', 'absolute', 1, 1]
+            ['disk_size_overhead', 'disk_size_overhead', 'absolute', 1, 1],
+            ['data_size', 'data_size', 'absolute', 1, 1]
         ]
     }
 }
@@ -96,11 +96,11 @@ class Service(SimpleService):
 
     def __init__(self, configuration=None, name=None):
         SimpleService.__init__(self, configuration=configuration, name=name)
-        self.couch_db = configuration['db']
+        self.couch_db = configuration['couch_db']
         self.couch_stats = configuration['couch_stats']
         self.couch_config = configuration['couch_config']
-        if len(self.couch_url) == 0:
-            raise Exception('Invalid couch_url')
+        if len(self.couch_stats) == 0:
+            raise Exception('Invalid couch_stats')
         self.order = ORDER
         self.definitions = CHARTS
         self.data = {
@@ -132,35 +132,36 @@ class Service(SimpleService):
             stats = urllib2.urlopen(self.couch_stats).read()
 
             httpd = json.loads(stats)['httpd_request_methods']
-            self.data['copy_queries'] = httpd['COPY']['mean']
-            self.data['delete_queries'] = httpd['DELETE']['mean']
-            self.data['get_queries'] = httpd['GET']['mean']
-            self.data['head_queries'] = httpd['HEAD']['mean']
-            self.data['post_queries'] = httpd['POST']['mean']
-            self.data['put_queries'] = httpd['PUT']['mean']
+            self.data['copy_queries'] = httpd['COPY']['current']
+            self.data['delete_queries'] = httpd['DELETE']['current']
+            self.data['get_queries'] = httpd['GET']['current']
+            self.data['head_queries'] = httpd['HEAD']['current']
+            self.data['post_queries'] = httpd['POST']['current']
+            self.data['put_queries'] = httpd['PUT']['current']
 
             status = json.loads(stats)['httpd_status_codes']
-            self.data['200_queries'] = status['200']['mean']
-            self.data['201_queries'] = status['201']['mean']
-            self.data['202_queries'] = status['202']['mean']
-            self.data['301_queries'] = status['301']['mean']
-            self.data['304_queries'] = status['304']['mean']
-            self.data['400_queries'] = status['400']['mean']
-            self.data['401_queries'] = status['401']['mean']
-            self.data['403_queries'] = status['403']['mean']
-            self.data['404_queries'] = status['404']['mean']
-            self.data['405_queries'] = status['405']['mean']
-            self.data['409_queries'] = status['409']['mean']
-            self.data['412_queries'] = status['412']['mean']
-            self.data['500_queries'] = status['500']['mean']
+            self.data['200_queries'] = status['200']['current']
+            self.data['201_queries'] = status['201']['current']
+            self.data['202_queries'] = status['202']['current']
+            self.data['301_queries'] = status['301']['current']
+            self.data['304_queries'] = status['304']['current']
+            self.data['400_queries'] = status['400']['current']
+            self.data['401_queries'] = status['401']['current']
+            self.data['403_queries'] = status['403']['current']
+            self.data['404_queries'] = status['404']['current']
+            self.data['405_queries'] = status['405']['current']
+            self.data['409_queries'] = status['409']['current']
+            self.data['412_queries'] = status['412']['current']
+            self.data['500_queries'] = status['500']['current']
 
             # fragmentation located in self.couch_db
             # it is ('disk_size' - 'data_size')
             database = urllib2.urlopen(self.couch_db).read()
             frag = json.loads(database)
-            self.data['data_size'] = frag['data_size']
-            self.data['disk_size_overhead'] = frag[
-                'disk_size'] - frag['data_size']
+            # convert to megabytes
+            # data_size and disk_size storaged in bytes
+            self.data['data_size'] = frag['data_size'] / 1000000
+            self.data['disk_size_overhead'] = (frag['disk_size'] -frag['data_size']) / 1000000
 
             # replace CouchDB 'null' values with zero
             for key in self.data:
