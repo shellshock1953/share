@@ -1,0 +1,289 @@
+{
+    "couchdb": {
+        "auth_cache_hits": {
+            "current": null,
+            "description": "number of authentication cache hits",
+            "max": null,
+            "mean": null,
+            "min": null,
+            "stddev": null,
+            "sum": null
+        },
+        "auth_cache_misses": {
+            "current": null,
+            "description": "number of authentication cache misses",
+            "max": null,
+            "mean": null,
+            "min": null,
+            "stddev": null,
+            "sum": null
+        },
+        "database_reads": {
+            "current": 3785193.0,
+            "description": "number of times a document was read from a database",
+            "max": 180,
+            "mean": 6.026,
+            "min": 0,
+            "stddev": 17.936,
+            "sum": 3785193.0
+        },
+        "database_writes": {
+            "current": 222510.0,
+            "description": "number of times a database was changed",
+            "max": 20,
+            "mean": 0.354,
+            "min": 0,
+            "stddev": 0.748,
+            "sum": 222510.0
+        },
+        "open_databases": {
+            "current": 2.0,
+            "description": "number of open databases",
+            "max": 1,
+            "mean": 0.0,
+            "min": 0,
+            "stddev": 0.002,
+            "sum": 2.0
+        },
+        "open_os_files": {
+            "current": 11.0,
+            "description": "number of file descriptors CouchDB has open",
+            "max": 3,
+            "mean": 0.0,
+            "min": -2,
+            "stddev": 0.011,
+            "sum": 11.0
+        },
+        "request_time": {
+            "current": 2132571.19,
+            "description": "length of a request inside CouchDB without MochiWeb",
+            "max": 11370.0,
+            "mean": 4.614,
+            "min": 1.0,
+            "stddev": 20.977,
+            "sum": 2132571.19
+        }
+    },
+    "httpd": {
+        "bulk_requests": {
+            "current": 33798.0,
+            "description": "number of bulk requests",
+            "max": 19,
+            "mean": 0.054,
+            "min": 0,
+            "stddev": 0.531,
+            "sum": 33798.0
+        },
+        "clients_requesting_changes": {
+            "current": 0,
+            "description": "number of clients for continuous _changes",
+            "max": 3,
+            "mean": 0.0,
+            "min": -3,
+            "stddev": 0.094,
+            "sum": 0
+        },
+        "requests": {
+            "current": 824521.0,
+            "description": "number of HTTP requests",
+            "max": 39,
+            "mean": 1.313,
+            "min": 0,
+            "stddev": 1.579,
+            "sum": 824521.0
+        },
+        "temporary_view_reads": {
+            "current": null,
+            "description": "number of temporary view reads",
+            "max": null,
+            "mean": null,
+            "min": null,
+            "stddev": null,
+            "sum": null
+        },
+        "view_reads": {
+            "current": 90.0,
+            "description": "number of view reads",
+            "max": 3,
+            "mean": 0.0,
+            "min": 0,
+            "stddev": 0.012,
+            "sum": 90.0
+        }
+    },
+    "httpd_request_methods": {
+        "COPY": {
+            "current": null,
+            "description": "number of HTTP COPY requests",
+            "max": null,
+            "mean": null,
+            "min": null,
+            "stddev": null,
+            "sum": null
+        },
+        "DELETE": {
+            "current": null,
+            "description": "number of HTTP DELETE requests",
+            "max": null,
+            "mean": null,
+            "min": null,
+            "stddev": null,
+            "sum": null
+        },
+        "GET": {
+            "current": 601888.0,
+            "description": "number of HTTP GET requests",
+            "max": 22,
+            "mean": 0.958,
+            "min": 0,
+            "stddev": 1.17,
+            "sum": 601888.0
+        },
+        "HEAD": {
+            "current": 30.0,
+            "description": "number of HTTP HEAD requests",
+            "max": 12,
+            "mean": 0.0,
+            "min": 0,
+            "stddev": 0.021,
+            "sum": 30.0
+        },
+        "POST": {
+            "current": 222592.0,
+            "description": "number of HTTP POST requests",
+            "max": 20,
+            "mean": 0.354,
+            "min": 0,
+            "stddev": 0.749,
+            "sum": 222592.0
+        },
+        "PUT": {
+            "current": 13.0,
+            "description": "number of HTTP PUT requests",
+            "max": 10,
+            "mean": 0.0,
+            "min": 0,
+            "stddev": 0.013,
+            "sum": 13.0
+        }
+    },
+    "httpd_status_codes": {
+        "200": {
+            "current": 561493.0,
+            "description": "number of HTTP 200 OK responses",
+            "max": 14,
+            "mean": 0.894,
+            "min": 0,
+            "stddev": 1.034,
+            "sum": 561493.0
+        },
+        "201": {
+            "current": 222512.0,
+            "description": "number of HTTP 201 Created responses",
+            "max": 20,
+            "mean": 0.354,
+            "min": 0,
+            "stddev": 0.748,
+            "sum": 222512.0
+        },
+        "202": {
+            "current": null,
+            "description": "number of HTTP 202 Accepted responses",
+            "max": null,
+            "mean": null,
+            "min": null,
+            "stddev": null,
+            "sum": null
+        },
+        "301": {
+            "current": null,
+            "description": "number of HTTP 301 Moved Permanently responses",
+            "max": null,
+            "mean": null,
+            "min": null,
+            "stddev": null,
+            "sum": null
+        },
+        "304": {
+            "current": 1014.0,
+            "description": "number of HTTP 304 Not Modified responses",
+            "max": 3,
+            "mean": 0.002,
+            "min": 0,
+            "stddev": 0.041,
+            "sum": 1014.0
+        },
+        "400": {
+            "current": 3.0,
+            "description": "number of HTTP 400 Bad Request responses",
+            "max": 1,
+            "mean": 0.0,
+            "min": 0,
+            "stddev": 0.003,
+            "sum": 3.0
+        },
+        "401": {
+            "current": null,
+            "description": "number of HTTP 401 Unauthorized responses",
+            "max": null,
+            "mean": null,
+            "min": null,
+            "stddev": null,
+            "sum": null
+        },
+        "403": {
+            "current": null,
+            "description": "number of HTTP 403 Forbidden responses",
+            "max": null,
+            "mean": null,
+            "min": null,
+            "stddev": null,
+            "sum": null
+        },
+        "404": {
+            "current": 39498.0,
+            "description": "number of HTTP 404 Not Found responses",
+            "max": 22,
+            "mean": 0.063,
+            "min": 0,
+            "stddev": 0.596,
+            "sum": 39498.0
+        },
+        "405": {
+            "current": null,
+            "description": "number of HTTP 405 Method Not Allowed responses",
+            "max": null,
+            "mean": null,
+            "min": null,
+            "stddev": null,
+            "sum": null
+        },
+        "409": {
+            "current": null,
+            "description": "number of HTTP 409 Conflict responses",
+            "max": null,
+            "mean": null,
+            "min": null,
+            "stddev": null,
+            "sum": null
+        },
+        "412": {
+            "current": 3.0,
+            "description": "number of HTTP 412 Precondition Failed responses",
+            "max": 2,
+            "mean": 0.0,
+            "min": 0,
+            "stddev": 0.003,
+            "sum": 3.0
+        },
+        "500": {
+            "current": null,
+            "description": "number of HTTP 500 Internal Server Error responses",
+            "max": null,
+            "mean": null,
+            "min": null,
+            "stddev": null,
+            "sum": null
+        }
+    }
+}
