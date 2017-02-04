@@ -179,9 +179,10 @@ class Service(SimpleService):
                 frag['disk_size'] - frag['data_size']) / 1000000
 
             # replace CouchDB 'null' values with zero
-            for key in self.data:
-                if self.data[key] == None:
-                    self.data[key] = 0
+            # delete this?
+            #for key in self.data:
+            #    if self.data[key] == None:
+            #        self.data[key] = 0
         except (ValueError, AttributeError):
             return self.data
         return self.data
