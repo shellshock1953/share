@@ -16,7 +16,8 @@ retries = 60
 update_every = 1
 
 ORDER = ['httpd_queries_absolute', 'status_codes_queries_absolute',
-         'httpd_queries_incremental', 'status_codes_queries_incremental']
+         'httpd_queries_incremental', 'status_codes_queries_incremental',
+         'database_fragmentation']
 CHARTS = {
     'httpd_queries_absolute': {
         'options': [None, 'Http queries', 'requests', '',
@@ -79,6 +80,14 @@ CHARTS = {
             ['412_queries', '412', 'incremental', 1, 1],
             ['500_queries', '500', 'incremental', 1, 1]
         ]
+    },
+    'database_fragmentation': {
+        'options': [None, 'Database fragmentation', 'G', '',
+                    '', 'stacked'],
+        'lines': [
+            ['data_size', 'data_size', 'absolute', 1, 1],
+            ['disk_size', 'disk_size_overhead', 'absolute', 1, 1]
+        ]
     }
 }
 
@@ -87,17 +96,19 @@ class Service(SimpleService):
 
     def __init__(self, configuration=None, name=None):
         SimpleService.__init__(self, configuration=configuration, name=name)
-        self.couch_url = configuration['couch_url']
+        self.couch_db = configuration['db']
+        self.couch_stats = configuration['couch_stats']
+        self.couch_config = configuration['couch_config']
         if len(self.couch_url) == 0:
             raise Exception('Invalid couch_url')
         self.order = ORDER
         self.definitions = CHARTS
         self.data = {
-            'copy_queries':0,
+            'copy_queries': 0,
             'delete_queries': 0,
             'get_queries': 0,
-            'head_queries':0,
-            'post_queries':0,
+            'head_queries': 0,
+            'post_queries': 0,
             'put_queries': 0,
             '200_queries': 0,
             '201_queries': 0,
@@ -111,14 +122,16 @@ class Service(SimpleService):
             '405_queries': 0,
             '409_queries': 0,
             '412_queries': 0,
-            '500_queries': 0
+            '500_queries': 0,
+            'data_size': 0,
+            'disk_size_overhead': 0
         }
 
     def _get_data(self):
         try:
-            response = urllib2.urlopen(self.couch_url).read()
+            stats = urllib2.urlopen(self.couch_stats).read()
 
-            httpd = json.loads(response)['httpd_request_methods']
+            httpd = json.loads(stats)['httpd_request_methods']
             self.data['copy_queries'] = httpd['COPY']['mean']
             self.data['delete_queries'] = httpd['DELETE']['mean']
             self.data['get_queries'] = httpd['GET']['mean']
@@ -126,7 +139,7 @@ class Service(SimpleService):
             self.data['post_queries'] = httpd['POST']['mean']
             self.data['put_queries'] = httpd['PUT']['mean']
 
-            status = json.loads(response)['httpd_status_codes']
+            status = json.loads(stats)['httpd_status_codes']
             self.data['200_queries'] = status['200']['mean']
             self.data['201_queries'] = status['201']['mean']
             self.data['202_queries'] = status['202']['mean']
@@ -141,6 +154,14 @@ class Service(SimpleService):
             self.data['412_queries'] = status['412']['mean']
             self.data['500_queries'] = status['500']['mean']
 
+            # fragmentation located in self.couch_db
+            # it is ('disk_size' - 'data_size')
+            database = urllib2.urlopen(self.couch_db).read()
+            frag = json.loads(database)
+            self.data['data_size'] = frag['data_size']
+            self.data['disk_size_overhead'] = frag[
+                'disk_size'] - frag['data_size']
+
             # replace CouchDB 'null' values with zero
             for key in self.data:
                 if self.data[key] == None:
@@ -151,4 +172,4 @@ class Service(SimpleService):
 
 #s = Service(configuration={ 'update_every':1, 'priority':6000, 'retries':60, 'couch_url':'http://0.0.0.0:5984/_stats' },name=None)
 #d = s._get_data()
-#print d['200_queries']
+# print d['200_queries']
