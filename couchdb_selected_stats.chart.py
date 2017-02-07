@@ -17,7 +17,7 @@ update_every = 1
 
 ORDER = ['httpd_queries_absolute', 'status_codes_queries_absolute',
          'httpd_queries_incremental', 'status_codes_queries_incremental',
-         'database_fragmentation']
+         'io_statistics', 'database_fragmentation']
 CHARTS = {
     'httpd_queries_absolute': {
         'options': [None, 'Http queries', 'requests', '',
@@ -81,6 +81,14 @@ CHARTS = {
             ['500_queries', '500', 'incremental', 1, 1]
         ]
     },
+    'io_statistics': {
+        'options': [None, 'I/O statistics', 'reads/writes', '',
+                    '', 'stacked'],
+        'lines': [
+            ['reads', 'reads', 'absolute', 1, 1],
+            ['writes', 'writes', 'absolute', 1, 1]
+        ]
+    },
     'database_fragmentation': {
         'options': [None, 'Database fragmentation', 'Megabytes', '',
                     '', 'stacked'],
@@ -98,8 +106,7 @@ class Service(SimpleService):
         SimpleService.__init__(self, configuration=configuration, name=name)
         self.couch_db = configuration['couch_db']
         self.couch_stats = configuration['couch_stats']
-        self.couch_config = configuration['couch_config']
-        if len(self.couch_stats) == 0:
+        if len(self.couch_stats) == 0 or len(self.couch_db) == 0:
             raise Exception('Invalid couch_stats')
         self.order = ORDER
         self.definitions = CHARTS
@@ -123,6 +130,8 @@ class Service(SimpleService):
             '409_queries': 0,
             '412_queries': 0,
             '500_queries': 0,
+            'reads': 0,
+            'writes': 0,
             'data_size': 0,
             'disk_size_overhead': 0
         }
@@ -154,6 +163,11 @@ class Service(SimpleService):
             self.data['412_queries'] = status['412']['current']
             self.data['500_queries'] = status['500']['current']
 
+            # DB I/O
+            io = json.loads(stats)['couchdb']
+            self.data['db_reads'] = io['database_reads']['current']
+            self.data['db_writes'] = io['database_writes']['current']
+
             # fragmentation located in self.couch_db
             # it is ('disk_size' - 'data_size')
             database = urllib2.urlopen(self.couch_db).read()
@@ -161,7 +175,8 @@ class Service(SimpleService):
             # convert to megabytes
             # data_size and disk_size storaged in bytes
             self.data['data_size'] = frag['data_size'] / 1000000
-            self.data['disk_size_overhead'] = (frag['disk_size'] -frag['data_size']) / 1000000
+            self.data['disk_size_overhead'] = (
+                frag['disk_size'] - frag['data_size']) / 1000000
 
             # replace CouchDB 'null' values with zero
             for key in self.data:
