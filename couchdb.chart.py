@@ -3,6 +3,7 @@
 
 
 from base import SimpleService
+#from python_modules.base import SimpleService
 
 import json
 try:
@@ -15,23 +16,29 @@ retries = 60
 update_every = 1
 
 ORDER = [
-    'httpd_queries',
-    'status_codes',
-    'io_statistics',
+    # 'active_tasks',
+    'authenthentication_cache',
+    'continuous_changes_listeners'
+    'database_io_statistics',
+    'database_documents',
     'database_fragmentation',
-    'auth_cache_hits',
-    'clients_requesting_changes',
+    'httpd_methods',
+    'httpd_requests',
+    'status_codes',
+    'open_databases',
+    'open_files'
 ]
+
 CHARTS = {
-    'httpd_queries': {
-        'options': [None, 'Http queries', 'requests', '', '', 'stacked'],
+    'httpd_methods': {
+        'options': [None, 'Httpd request methods', 'requests', '', '', 'stacked'],
         'lines': [
-            ['COPY', 'COPY queries', 'absolute', 1, 1],
-            ['DELETE', 'DELETE queries', 'absolute', 1, 1],
-            ['GET', 'GET queries', 'absolute', 1, 1],
-            ['HEAD', 'HEAD queries', 'absolute', 1, 1],
-            ['POST', 'POST queries', 'absolute', 1, 1],
-            ['PUT', 'PUT queries', 'absolute', 1, 1]
+            ['COPY', 'COPY', 'absolute', 1, 1],
+            ['DELETE', 'DELETE', 'absolute', 1, 1],
+            ['GET', 'GET', 'absolute', 1, 1],
+            ['HEAD', 'HEAD', 'absolute', 1, 1],
+            ['POST', 'POST', 'absolute', 1, 1],
+            ['PUT', 'PUT', 'absolute', 1, 1]
         ]
     },
     'status_codes': {
@@ -52,7 +59,7 @@ CHARTS = {
             ['500', '500 queries', 'absolute', 1, 1]
         ]
     },
-    'io_statistics': {
+    'database_io_statistics': {
         'options': [None, 'I/O statistics', 'reads/writes', '', '', 'stacked'],
         'lines': [
             ['reads', 'db reads', 'absolute', 1, 1],
@@ -60,7 +67,7 @@ CHARTS = {
         ]
     },
     'authenthentication_cache': {
-        'options': [None, 'Authentification cache', 'ration', '', '', 'stacked'],
+        'options': [None, 'Authentification cache', 'ratio', '', '', 'stacked'],
         'lines': [
             ['cache_hits', 'cache hits', 'absolute', 1, 1],
             ['cache_misses', 'cache misses', 'absolute', 1, 1]
@@ -73,10 +80,38 @@ CHARTS = {
             ['data_size', 'data size', 'absolute', 1, 1]
         ]
     },
-    'clients_requesting_changes': {
+    'continuous_changes_listeners': {
         'options': [None, 'CouchDB continuous changes listeners', 'clients', '', '', 'stacked'],
         'lines': [
             ['clients', 'clients for continuous changes', 'absolute', 1, 1]
+        ]
+    },
+    'database_documents': {
+        'options': [None, 'CouchDB documents', 'documents', '', '', 'stacked'],
+        'lines': [
+            ['docs', 'docs', 'absolute', 1, 1],
+            ['docs_deleted', 'docs_deleted', 'absolute', 1, 1]
+        ]
+    },
+    'httpd_requests': {
+        'options': [None, 'CouchDB httpd requests', 'documents', '', '', 'stacked'],
+        'lines': [
+            ['requests', 'requests', 'absolute', 1, 1],
+            ['bulk_requests', 'bulk_requests', 'absolute', 1, 1],
+            ['view_reads', 'view_reads', 'absolute', 1, 1],
+            ['temporary_view_reads', 'temporary_view_reads', 'absolute', 1, 1]
+        ]
+    },
+    'open_databases': {
+        'options': [None, 'CouchDB open databases', 'databases', '', '', 'stacked'],
+        'lines': [
+            ['dbs', 'databases', 'absolute', 1, 1],
+        ]
+    },
+    'open_files': {
+        'options': [None, 'CouchDB open files', 'files', '', '', 'stacked'],
+        'lines': [
+            ['files', 'files', 'absolute', 1, 1],
         ]
     }
 }
@@ -86,8 +121,10 @@ class Service(SimpleService):
 
     def __init__(self, configuration=None, name=None):
         SimpleService.__init__(self, configuration=configuration, name=name)
-        self.couch_db = configuration['couch_db']
-        self.couch_stats = configuration['couch_stats']
+        #self.couch_db = configuration['couch_db']
+        self.couch_db = 'http://0.0.0.0:5984/edge_db'
+        #self.couch_stats = configuration['couch_stats']
+        self.couch_stats = 'http://0.0.0.0:5984/_stats'
         if len(self.couch_stats) == 0 or len(self.couch_db) == 0:
             raise Exception('Invalid couch')
         self.order = ORDER
@@ -120,8 +157,12 @@ class Service(SimpleService):
             'writes': 0,
             'clients': 0,
             'docs': 0,
-            'docs_deleted': 0
-        }
+            'docs_deleted': 0,
+            'requests' : 0,
+            'bulk_requests' : 0,
+            'view_reads' : 0,
+            'temporary_view_reads' : 0
+    }
 
     def _get_data(self):
         try:
@@ -129,16 +170,16 @@ class Service(SimpleService):
             stats = urllib2.urlopen(self.couch_stats).read()
             doc_stats = json.loads(stats)
 
-            # http queries
-            httpd = doc_stats['httpd_request_methods']
-            self.data['COPY'] = httpd['COPY']['current']
-            self.data['DELETE'] = httpd['DELETE']['current']
-            self.data['GET'] = httpd['GET']['current']
-            self.data['HEAD'] = httpd['HEAD']['current']
-            self.data['POST'] = httpd['POST']['current']
-            self.data['PUT'] = httpd['PUT']['current']
+            # httpd methods
+            httpd_methods = doc_stats['httpd_request_methods']
+            self.data['COPY'] = httpd_methods['COPY']['current']
+            self.data['DELETE'] = httpd_methods['DELETE']['current']
+            self.data['GET'] = httpd_methods['GET']['current']
+            self.data['HEAD'] = httpd_methods['HEAD']['current']
+            self.data['POST'] = httpd_methods['POST']['current']
+            self.data['PUT'] = httpd_methods['PUT']['current']
 
-            # http status codes
+            # httpd status codes
             status = doc_stats['httpd_status_codes']
             self.data['200'] = status['200']['current']
             self.data['201'] = status['201']['current']
@@ -159,15 +200,28 @@ class Service(SimpleService):
             self.data['db_reads'] = couchdb['database_reads']['current']
             self.data['db_writes'] = couchdb['database_writes']['current']
 
+            # open DBs
+            self.data['dbs'] = couchdb['open_databases']['current']
+
+            # open files
+            self.data['files'] = couchdb['open_os_files']['current']
+
             # Auth cache
             self.data['cache_hits'] = couchdb['auth_cache_hits']['current']
             self.data['cache_misses'] = couchdb['auth_cache_misses']['current']
 
-            # Clients requesting changes
-            self.data['clients'] = \
-                doc_stats['httpd']['clients_requesting_changes']['current']
+            # Requests
+            httpd_requests = doc_stats['httpd']
+            self.data['requests'] = httpd_requests['requests']['current']
+            self.data['bulk_requests'] = httpd_requests['bulk_requests']['current']
+            self.data['view_reads'] = httpd_requests['view_reads']['current']
+            self.data['temporary_view_reads'] = httpd_requests['temporary_view_reads']['current']
 
-            """ EDGE_DB """
+            # Clients requesting changes
+            self.data['clients'] = httpd_requests['clients_requesting_changes']['current']
+
+
+            """ COUCH_DB """
             db = urllib2.urlopen(self.couch_db).read()
             doc_db = json.loads(db)
 
@@ -180,6 +234,15 @@ class Service(SimpleService):
             self.data['docs'] = doc_db['doc_count']
             self.data['docs_deleted'] = doc_db['doc_del_count']
 
+            
+            for item in self.data:
+                if self.data[item] == None:
+                    self.data[item] = 0
         except (ValueError, AttributeError):
             return self.data
         return self.data
+
+#s = Service(configuration={ 'update_every':2, 'priority':60000, 'retries':60},name=None)
+#import pdb
+#pdb.set_trace()
+#g = s._get_data()
