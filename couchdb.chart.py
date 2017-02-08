@@ -18,7 +18,7 @@ update_every = 1
 ORDER = [
     # 'active_tasks',
     'authenthentication_cache',
-    'continuous_changes_listeners'
+    'continuous_changes_listeners',
     'database_io_statistics',
     'database_documents',
     'database_fragmentation',
@@ -30,6 +30,40 @@ ORDER = [
 ]
 
 CHARTS = {
+    'authenthentication_cache': {
+        'options': [None, 'Authentification cache', 'ratio', '', '', 'stacked'],
+        'lines': [
+            ['cache_hits', 'cache hits', 'absolute', 1, 1],
+            ['cache_misses', 'cache misses', 'absolute', 1, 1]
+        ]
+    },
+    'continuous_changes_listeners': {
+        'options': [None, 'CouchDB continuous changes listeners', 'clients', '', '', 'stacked'],
+        'lines': [
+            ['clients', 'clients for continuous changes', 'absolute', 1, 1]
+        ]
+    },
+    'database_io_statistics': {
+        'options': [None, 'I/O statistics', 'reads/writes', '', '', 'stacked'],
+        'lines': [
+            ['reads', 'db reads', 'absolute', 1, 1],
+            ['writes', 'db writes', 'absolute', 1, 1]
+        ]
+    },
+    'database_documents': {
+        'options': [None, 'CouchDB documents', 'documents', '', '', 'stacked'],
+        'lines': [
+            ['docs', 'docs', 'absolute', 1, 1],
+            ['docs_deleted', 'docs_deleted', 'absolute', 1, 1]
+        ]
+    },
+    'database_fragmentation': {
+        'options': [None, 'Database fragmentation', 'Megabytes', '', '', 'stacked'],
+        'lines': [
+            ['disk_size_overhead', 'disk size overhead', 'absolute', 1, 1],
+            ['data_size', 'data size', 'absolute', 1, 1]
+        ]
+    },
     'httpd_methods': {
         'options': [None, 'Httpd request methods', 'requests', '', '', 'stacked'],
         'lines': [
@@ -39,6 +73,15 @@ CHARTS = {
             ['HEAD', 'HEAD', 'absolute', 1, 1],
             ['POST', 'POST', 'absolute', 1, 1],
             ['PUT', 'PUT', 'absolute', 1, 1]
+        ]
+    },
+    'httpd_requests': {
+        'options': [None, 'CouchDB httpd requests', 'documents', '', '', 'stacked'],
+        'lines': [
+            ['requests', 'requests', 'absolute', 1, 1],
+            ['bulk_requests', 'bulk_requests', 'absolute', 1, 1],
+            ['view_reads', 'view_reads', 'absolute', 1, 1],
+            ['temporary_view_reads', 'temporary_view_reads', 'absolute', 1, 1]
         ]
     },
     'status_codes': {
@@ -57,49 +100,6 @@ CHARTS = {
             ['409', '409 queries', 'absolute', 1, 1],
             ['412', '412 queries', 'absolute', 1, 1],
             ['500', '500 queries', 'absolute', 1, 1]
-        ]
-    },
-    'database_io_statistics': {
-        'options': [None, 'I/O statistics', 'reads/writes', '', '', 'stacked'],
-        'lines': [
-            ['reads', 'db reads', 'absolute', 1, 1],
-            ['writes', 'db writes', 'absolute', 1, 1]
-        ]
-    },
-    'authenthentication_cache': {
-        'options': [None, 'Authentification cache', 'ratio', '', '', 'stacked'],
-        'lines': [
-            ['cache_hits', 'cache hits', 'absolute', 1, 1],
-            ['cache_misses', 'cache misses', 'absolute', 1, 1]
-        ]
-    },
-    'database_fragmentation': {
-        'options': [None, 'Database fragmentation', 'Megabytes', '', '', 'stacked'],
-        'lines': [
-            ['disk_size_overhead', 'disk size overhead', 'absolute', 1, 1],
-            ['data_size', 'data size', 'absolute', 1, 1]
-        ]
-    },
-    'continuous_changes_listeners': {
-        'options': [None, 'CouchDB continuous changes listeners', 'clients', '', '', 'stacked'],
-        'lines': [
-            ['clients', 'clients for continuous changes', 'absolute', 1, 1]
-        ]
-    },
-    'database_documents': {
-        'options': [None, 'CouchDB documents', 'documents', '', '', 'stacked'],
-        'lines': [
-            ['docs', 'docs', 'absolute', 1, 1],
-            ['docs_deleted', 'docs_deleted', 'absolute', 1, 1]
-        ]
-    },
-    'httpd_requests': {
-        'options': [None, 'CouchDB httpd requests', 'documents', '', '', 'stacked'],
-        'lines': [
-            ['requests', 'requests', 'absolute', 1, 1],
-            ['bulk_requests', 'bulk_requests', 'absolute', 1, 1],
-            ['view_reads', 'view_reads', 'absolute', 1, 1],
-            ['temporary_view_reads', 'temporary_view_reads', 'absolute', 1, 1]
         ]
     },
     'open_databases': {
@@ -242,10 +242,6 @@ class Service(SimpleService):
                 if self.data[item] == None:
                     self.data[item] = 0
         except (ValueError, AttributeError):
+            print("ERR")
             return self.data
         return self.data
-
-#s = Service(configuration={ 'update_every':2, 'priority':60000, 'retries':60},name=None)
-#import pdb
-# pdb.set_trace()
-#g = s._get_data()
