@@ -158,11 +158,13 @@ class Service(SimpleService):
             'clients': 0,
             'docs': 0,
             'docs_deleted': 0,
-            'requests' : 0,
-            'bulk_requests' : 0,
-            'view_reads' : 0,
-            'temporary_view_reads' : 0
-    }
+            'requests': 0,
+            'bulk_requests': 0,
+            'view_reads': 0,
+            'temporary_view_reads': 0,
+            'files' : 0,
+            'dbs' : 0
+            }
 
     def _get_data(self):
         try:
@@ -213,13 +215,15 @@ class Service(SimpleService):
             # Requests
             httpd_requests = doc_stats['httpd']
             self.data['requests'] = httpd_requests['requests']['current']
-            self.data['bulk_requests'] = httpd_requests['bulk_requests']['current']
+            self.data['bulk_requests'] = httpd_requests[
+                'bulk_requests']['current']
             self.data['view_reads'] = httpd_requests['view_reads']['current']
-            self.data['temporary_view_reads'] = httpd_requests['temporary_view_reads']['current']
+            self.data['temporary_view_reads'] = httpd_requests[
+                'temporary_view_reads']['current']
 
             # Clients requesting changes
-            self.data['clients'] = httpd_requests['clients_requesting_changes']['current']
-
+            self.data['clients'] = httpd_requests[
+                'clients_requesting_changes']['current']
 
             """ COUCH_DB """
             db = urllib2.urlopen(self.couch_db).read()
@@ -234,7 +238,6 @@ class Service(SimpleService):
             self.data['docs'] = doc_db['doc_count']
             self.data['docs_deleted'] = doc_db['doc_del_count']
 
-            
             for item in self.data:
                 if self.data[item] == None:
                     self.data[item] = 0
@@ -244,5 +247,5 @@ class Service(SimpleService):
 
 #s = Service(configuration={ 'update_every':2, 'priority':60000, 'retries':60},name=None)
 #import pdb
-#pdb.set_trace()
+# pdb.set_trace()
 #g = s._get_data()
