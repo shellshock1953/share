@@ -60,7 +60,7 @@ class Service(SimpleService):
             raise Exception('Invalid couch_url')
         try:
             response = urllib2.urlopen(self.couch_url).read()
-            doc = json.loads(responce)
+            doc = json.loads(response)
             ORDER, CHARTS, DATA = parser(doc)
         except (ValueError, AttributeError):
             return None

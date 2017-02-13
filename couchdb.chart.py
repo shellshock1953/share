@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 # Description: CouchDB statistics netdata python.d module
 
-
 from base import SimpleService
 
 import json
@@ -27,7 +26,6 @@ ORDER = [
     'open_databases',
     'open_files'
 ]
-
 CHARTS = {
     'authenthentication_cache': {
         'options': [None, 'Authentification cache', 'ratio', '', '', 'stacked'],
@@ -209,6 +207,7 @@ class Service(SimpleService):
             self.data['cache_misses'] = couchdb['auth_cache_misses']['current']
 
             # Requests
+            # Requests
             httpd_requests = doc_stats['httpd']
             self.data['requests'] = httpd_requests['requests']['current']
             self.data['bulk_requests'] = httpd_requests[
@@ -227,8 +226,7 @@ class Service(SimpleService):
 
             # DB fragmentation
             self.data['data_size'] = doc_db['data_size'] / 1000000
-            self.data['disk_size_overhead'] = (
-                                                  doc_db['disk_size'] - doc_db['data_size']) / 1000000
+            self.data['disk_size_overhead'] = (doc_db['disk_size'] - doc_db['data_size']) / 1000000
 
             # DB documents
             self.data['docs'] = doc_db['doc_count']
