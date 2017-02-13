@@ -117,7 +117,6 @@ CHARTS = {
 
 
 class Service(SimpleService):
-
     def __init__(self, configuration=None, name=None):
         SimpleService.__init__(self, configuration=configuration, name=name)
         self.couch_db = configuration['couch_db']
@@ -159,9 +158,9 @@ class Service(SimpleService):
             'bulk_requests': 0,
             'view_reads': 0,
             'temporary_view_reads': 0,
-            'files' : 0,
-            'dbs' : 0
-            }
+            'files': 0,
+            'dbs': 0
+        }
 
     def _get_data(self):
         try:
@@ -229,14 +228,14 @@ class Service(SimpleService):
             # DB fragmentation
             self.data['data_size'] = doc_db['data_size'] / 1000000
             self.data['disk_size_overhead'] = (
-                doc_db['disk_size'] - doc_db['data_size']) / 1000000
+                                                  doc_db['disk_size'] - doc_db['data_size']) / 1000000
 
             # DB documents
             self.data['docs'] = doc_db['doc_count']
             self.data['docs_deleted'] = doc_db['doc_del_count']
 
             for item in self.data:
-                if self.data[item] == None:
+                if self.data[item] is None:
                     self.data[item] = 0
         except (ValueError, AttributeError):
             return self.data
