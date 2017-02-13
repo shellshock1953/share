@@ -86,6 +86,7 @@ class Service(SimpleService):
             'v_edge': 0,
         }
 
+
     def _get_data(self):
         try:
             doc = self.couch_tsk.read()
