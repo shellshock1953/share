@@ -3,7 +3,6 @@
 
 
 from base import SimpleService
-#from python_modules.base import SimpleService
 
 import json
 try:
@@ -240,6 +239,5 @@ class Service(SimpleService):
                 if self.data[item] == None:
                     self.data[item] = 0
         except (ValueError, AttributeError):
-            print("ERR")
             return self.data
         return self.data
