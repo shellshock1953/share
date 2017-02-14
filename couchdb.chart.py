@@ -43,8 +43,8 @@ CHARTS = {
     'database_io_statistics': {
         'options': [None, 'I/O statistics', 'reads/writes', '', '', 'stacked'],
         'lines': [
-            ['reads', 'db reads', 'absolute', 1, 1],
-            ['writes', 'db writes', 'absolute', 1, 1]
+            ['db_reads', 'db reads', 'absolute', 1, 1],
+            ['db_writes', 'db writes', 'absolute', 1, 1]
         ]
     },
     'database_documents': {
