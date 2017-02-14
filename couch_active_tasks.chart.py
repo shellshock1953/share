@@ -1,6 +1,6 @@
 # DEBUG
-# import sys
-# sys.path.append('/data/shellshock/install/netdata/python.d/python_modules/')
+import sys
+sys.path.append('/data/shellshock/install/netdata/python.d/python_modules/')
 
 from base import SimpleService
 import json
@@ -59,6 +59,7 @@ CHARTS = {
 class Service(SimpleService):
     def __init__(self, configuration=None, name=None):
         SimpleService.__init__(self, configuration=configuration, name=name)
+        self.couch_dbs = configuration['couch_dbs']
         self.couch_tsk = configuration['couch_tsk']
         if len(self.couch_tsk) is 0:
             raise Exception('Invalid couch url')
@@ -84,8 +85,8 @@ class Service(SimpleService):
 
             # TODO get all dbs
             # set dbs in .conf like a list
-            all_dbs = ["edge_db", "logs_db", "public_sandbox", "shellshock", "public_production_db",
-                       "prozorro_production_db"]
+            open_db = urllib2.urlopen(self.couch_dbs).read()
+            all_dbs = json.loads(open_db)
 
             # TODO make dynamic types defined in .conf ???
             available_tasks = [
@@ -100,15 +101,16 @@ class Service(SimpleService):
                 for available_task in available_tasks:
                     self.data[available_task + '_' + available_db] = 0
 
-            # DEBUG
             doc = urllib2.urlopen(self.couch_tsk).read()
+            # DEBUG
             # doc = self.couch_tsk.read()
             running_tasks = json.loads(doc)
             for current_task in running_tasks:
                 try:
                     db = current_task['database']
                 except KeyError:
-                    db = current_task['target']  # for replication
+                    db = current_task['target']
+                    db = db.split('/')[3]
 
                 task_name = current_task['type']
                 chart_name = task_name + '_' + db
