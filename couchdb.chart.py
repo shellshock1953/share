@@ -148,8 +148,8 @@ class Service(SimpleService):
             'PUT': 0,
             'data_size': 0,
             'disk_size_overhead': 0,
-            'reads': 0,
-            'writes': 0,
+            'db_reads': 0,
+            'db_writes': 0,
             'clients': 0,
             'docs': 0,
             'docs_deleted': 0,
@@ -185,8 +185,8 @@ class Service(SimpleService):
         self.data['PUT'] = 0
         self.data['data_size'] = 0
         self.data['disk_size_overhead'] = 0
-        self.data['reads'] = 0
-        self.data['writes'] = 0
+        self.data['db_reads'] = 0
+        self.data['db_writes'] = 0
         self.data['clients'] = 0
         self.data['docs'] = 0
         self.data['docs_deleted'] = 0
