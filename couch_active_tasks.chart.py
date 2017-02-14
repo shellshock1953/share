@@ -1,6 +1,6 @@
 # DEBUG
-import sys
-sys.path.append('/data/shellshock/install/netdata/python.d/python_modules/')
+# import sys
+# sys.path.append('/data/shellshock/install/netdata/python.d/python_modules/')
 
 from base import SimpleService
 import json
@@ -65,6 +65,7 @@ class Service(SimpleService):
             raise Exception('Invalid couch url')
         # DEBUG
         # self.couch_tsk = open('/data/shellshock/share/active_task.phalanx.json')
+        # self.couch_dbs = ['edge_db','shellshock','public_production_db','prozorro_production_db']
         self.order = ORDER
         self.definitions = CHARTS
         self.data = {
@@ -87,6 +88,8 @@ class Service(SimpleService):
             # set dbs in .conf like a list
             open_db = urllib2.urlopen(self.couch_dbs).read()
             all_dbs = json.loads(open_db)
+            # DEBUG
+            # all_dbs = self.couch_dbs
 
             # TODO make dynamic types defined in .conf ???
             available_tasks = [
@@ -101,16 +104,19 @@ class Service(SimpleService):
                 for available_task in available_tasks:
                     self.data[available_task + '_' + available_db] = 0
 
-            doc = urllib2.urlopen(self.couch_tsk).read()
+            # doc = urllib2.urlopen(self.couch_tsk).read()
             # DEBUG
-            # doc = self.couch_tsk.read()
+            doc = self.couch_tsk.read()
             running_tasks = json.loads(doc)
             for current_task in running_tasks:
                 try:
                     db = current_task['database']
                 except KeyError:
-                    db = current_task['target']
-                    db = db.split('/')[3]
+                    if '/' in current_task['target']:
+                        db_str = current_task['target']
+                        db = db_str.split('/')[3]
+                    else:
+                        db = current_task['target']
 
                 task_name = current_task['type']
                 chart_name = task_name + '_' + db
@@ -119,6 +125,7 @@ class Service(SimpleService):
                 for available_task in available_tasks:
                     if task_name == available_task:
                         self.data[available_task + '_' + db] += 1
+                        self.data[task_name+'_task'] += 1
 
         except (ValueError, AttributeError):
             return None
