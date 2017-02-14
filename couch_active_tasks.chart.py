@@ -100,8 +100,6 @@ class Service(SimpleService):
                 for available_task in available_tasks:
                     self.data[available_task + '_' + available_db] = 0
 
-            print self.data
-
             # DEBUG
             doc = urllib2.urlopen(self.couch_tsk).read()
             # doc = self.couch_tsk.read()
