@@ -3,6 +3,7 @@
 # sys.path.append('/data/shellshock/install/netdata/python.d/python_modules/')
 
 from base import SimpleService
+
 import json
 
 try:
@@ -60,6 +61,7 @@ class Service(SimpleService):
     def __init__(self, configuration=None, name=None):
         SimpleService.__init__(self, configuration=configuration, name=name)
         # self.couch_tsk = configuration['couch_tsk']
+        # DEBUG
         self.couch_tsk = open('/data/shellshock/share/active_task.phalanx.json')
         # if len(self.couch_tsk) is 0:
         #     raise Exception('Invalid couch url')
@@ -75,6 +77,12 @@ class Service(SimpleService):
 
     def _get_data(self):
         try:
+            # zero values EVERY time
+            self.data['indexer_task'] =0
+            self.data['database_compaction_task'] =0
+            self.data['view_compaction_task'] =0
+            self.data['replication_task'] =0
+
             #TODO get all dbs
             # set dbs in .conf like a list
             all_dbs = ["edge_db","logs_db","public_sandbox","shellshock","public_production_db"]
@@ -87,13 +95,17 @@ class Service(SimpleService):
                 self.data['replication_'+db] = 0
 
 
+            # DEBUG
+            #doc = urllib2.urlopen(self.couch_tsk).read()
             doc = self.couch_tsk.read()
             tasks = json.loads(doc)
             for task in tasks:
                 type = task['type']
                 chart_name = type + '_' + db
 
-                try:    # replication has no 'database' -- use 'target' instead
+                #TODO check db name
+                # task replication has no 'database' item -- use 'target' instead
+                try:
                     db = task['database']
                 except KeyError:
                     db = task['target']
