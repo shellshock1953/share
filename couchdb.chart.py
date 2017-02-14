@@ -4,6 +4,7 @@
 from base import SimpleService
 
 import json
+
 try:
     import urllib.request as urllib2
 except ImportError:
@@ -161,6 +162,40 @@ class Service(SimpleService):
         }
 
     def _get_data(self):
+        self.data['200'] = 0
+        self.data['201'] = 0
+        self.data['202'] = 0
+        self.data['301'] = 0
+        self.data['304'] = 0
+        self.data['400'] = 0
+        self.data['401'] = 0
+        self.data['403'] = 0
+        self.data['404'] = 0
+        self.data['405'] = 0
+        self.data['409'] = 0
+        self.data['412'] = 0
+        self.data['500'] = 0
+        self.data['cache_hits'] = 0
+        self.data['cache_misses'] = 0
+        self.data['COPY'] = 0
+        self.data['DELETE'] = 0
+        self.data['GET'] = 0
+        self.data['HEAD'] = 0
+        self.data['POST'] = 0
+        self.data['PUT'] = 0
+        self.data['data_size'] = 0
+        self.data['disk_size_overhead'] = 0
+        self.data['reads'] = 0
+        self.data['writes'] = 0
+        self.data['clients'] = 0
+        self.data['docs'] = 0
+        self.data['docs_deleted'] = 0
+        self.data['requests'] = 0
+        self.data['bulk_requests'] = 0
+        self.data['view_reads'] = 0
+        self.data['temporary_view_reads'] = 0
+        self.data['files'] = 0
+        self.data['dbs'] = 0
         try:
             """ STATS """
             stats = urllib2.urlopen(self.couch_stats).read()
