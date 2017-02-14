@@ -104,9 +104,9 @@ class Service(SimpleService):
                 for available_task in available_tasks:
                     self.data[available_task + '_' + available_db] = 0
 
-            # doc = urllib2.urlopen(self.couch_tsk).read()
+            doc = urllib2.urlopen(self.couch_tsk).read()
             # DEBUG
-            doc = self.couch_tsk.read()
+            # doc = self.couch_tsk.read()
             running_tasks = json.loads(doc)
             for current_task in running_tasks:
                 try:
