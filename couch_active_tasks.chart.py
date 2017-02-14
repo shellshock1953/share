@@ -1,10 +1,10 @@
 # DEBUG
-import sys
-sys.path.append('/data/shellshock/install/netdata/python.d/python_modules/')
+# import sys
+# sys.path.append('/data/shellshock/install/netdata/python.d/python_modules/')
 
 from base import SimpleService
-
 import json
+
 try:
     import urllib.request as urllib2
 except ImportError:
@@ -23,42 +23,35 @@ ORDER = [
 ]
 
 CHARTS = {
+    # show number of each running tasks
     'active_tasks': {
         'options': [None, 'Active tasks', 'tasks', '', '', 'stacked'],
         'lines': [
+            # available tasks
             ['indexer_task', 'indexer', 'absolute', 1, 1],
             ['replication_task', 'replication', 'absolute', 1, 1],
             ['database_compaction_task', 'database_compaction', 'absolute', 1, 1],
             ['view_compaction_task', 'view_compaction', 'absolute', 1, 1]
         ]
     },
+    # show number of bases per each task
+    # empty lines because of dynamic chart creation
+    # we dont know what dbs we will use
     'indexer': {
         'options': [None, 'Indexer tasks', 'tasks', '', '', 'stacked'],
-        'lines': [
-            ['i_public_production', '', 'absolute', 1, 1],
-            ['i_edge', '', 'absolute', 1, 1],
-        ]
+        'lines': [ ]
     },
     'database_compaction': {
         'options': [None, 'Indexer tasks', 'tasks', '', '', 'stacked'],
-        'lines': [
-            ['d_public_production', '', 'absolute', 1, 1],
-            ['d_edge', '', 'absolute', 1, 1],
-        ]
+        'lines': [ ]
     },
     'view_compaction': {
         'options': [None, 'Indexer tasks', 'tasks', '', '', 'stacked'],
-        'lines': [
-            ['v_public_production', '', 'absolute', 1, 1],
-            ['v_edge', '', 'absolute', 1, 1],
-        ]
+        'lines': [ ]
     },
     'replication': {
         'options': [None, 'Indexer tasks', 'tasks', '', '', 'stacked'],
-        'lines': [
-            ['r_public_production', '', 'absolute', 1, 1],
-            ['r_edge', '', 'absolute', 1, 1],
-        ]
+        'lines': [ ]
     }
 }
 
@@ -66,7 +59,7 @@ CHARTS = {
 class Service(SimpleService):
     def __init__(self, configuration=None, name=None):
         SimpleService.__init__(self, configuration=configuration, name=name)
-        #self.couch_tsk = configuration['couch_tsk']
+        # self.couch_tsk = configuration['couch_tsk']
         self.couch_tsk = open('/data/shellshock/share/active_task.phalanx.json')
         # if len(self.couch_tsk) is 0:
         #     raise Exception('Invalid couch url')
@@ -78,43 +71,55 @@ class Service(SimpleService):
             'view_compaction_task': 0,
             'replication_task': 0,
 
-            'i_public_production': 0,
-            'i_edge': 0,
-            'd_public_production': 0,
-            'd_edge': 0,
-            'v_public_production': 0,
-            'v_edge': 0,
         }
-
 
     def _get_data(self):
         try:
+            #TODO get all dbs
+            # set dbs in .conf like a list
+            all_dbs = ["edge_db","logs_db","public_sandbox","shellshock","public_production_db"]
+
+            # inialize db tasks
+            for db in all_dbs:
+                self.data['indexer_'+db] = 0
+                self.data['database_compaction_'+db] = 0
+                self.data['view_compaction_'+db] = 0
+                self.data['replication_'+db] = 0
+
+
             doc = self.couch_tsk.read()
-            tsk = json.loads(doc)
-            for item in tsk:
-                if item['type'] == 'indexer':
+            tasks = json.loads(doc)
+            for task in tasks:
+                type = task['type']
+                chart_name = type + '_' + db
+
+                try:    # replication has no 'database' -- use 'target' instead
+                    db = task['database']
+                except KeyError:
+                    db = task['target']
+
+                #TODO make dynamic types defined in .conf ???
+                if type == 'indexer':
                     self.data['indexer_task'] += 1
-                    if   item['database'] == 'public_production_db': self.data['i_public_production'] += 1
-                    elif item['database'] == 'edge_db': self.data['i_edge'] += 1
+                    CHARTS[type]['lines'].append([chart_name, db, 'absolute', 1, 1])
 
-                elif item['type'] == 'database_compaction_task':
+                elif type == 'database_compaction':
                     self.data['database_compaction_task'] += 1
-                    if   item['database'] == 'public_production_db': self.data['d_public_production'] += 1
-                    elif item['database'] == 'edge_db': self.data['d_edge'] += 1
+                    CHARTS[type]['lines'].append([chart_name, db, 'absolute', 1, 1])
 
-                elif item['type'] == 'view_compaction_task':
+                elif type == 'view_compaction':
                     self.data['view_compaction_task'] += 1
-                    if   item['database'] == 'public_production_db': self.data['v_public_production'] += 1
-                    elif item['database'] == 'edge_db': self.data['v_edge'] += 1
+                    CHARTS[type]['lines'].append([chart_name, db, 'absolute', 1, 1])
 
-                elif item['type'] == 'replication':
+                elif type == 'replication':
                     self.data['replication_task'] += 1
-                    if   item['source'] == 'public_production_db': self.data['r_public_production'] += 1
-                    elif item['souce'] == 'edge_db': self.data['r_edge'] += 1
+                    CHARTS[type]['lines'].append([chart_name, db, 'absolute', 1, 1])
 
         except (ValueError, AttributeError):
             return None
         return self.data
 
-s = Service(configuration={'priority':priority,'retries':retries,'update_every':update_every},name=None)
-print(s._get_data)
+
+# DEBUG
+# s = Service(configuration={'priority': priority, 'retries': retries, 'update_every': update_every}, name=None)
+# s._get_data()
