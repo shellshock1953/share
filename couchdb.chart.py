@@ -181,6 +181,12 @@ class Service(SimpleService):
         for key in self.data.keys():
             self.data[key] = 0
 
+        def calc_delta(metric):
+            if delta[metric] is 0:
+                delta[metric] = self.data[metric]
+            else:
+                self.data[metric] = self.data[metric] - delta[metric]
+
         try:
             """ STATS """
             stats = urllib2.urlopen(self.couch_stats).read()
@@ -253,10 +259,10 @@ class Service(SimpleService):
             self.data['docs_deleted'] = doc_db['doc_del_count']
 
             # DB documents
-            self.data['docs_delta'] = doc_db['doc_count'] - delta['docs_delta']
-            delta['docs_delta'] = self.data['docs_delta']
-            self.data['docs_deleted_delta'] = doc_db['doc_del_count'] - delta['docs_deleted_delta']
-            delta['docs_deleted'] = self.data['docs_deleted_delta']
+            self.data['docs_delta'] = doc_db['doc_count']
+            calc_delta('docs_delta')
+            self.data['docs_deleted_delta'] = doc_db['doc_del_count']
+            calc_delta('docs_deleted_delta')
 
             for item in self.data:
                 if self.data[item] is None:
