@@ -183,6 +183,7 @@ class Service(SimpleService):
                 delta[metric] = self.data[metric]
             else:
                 self.data[metric] = self.data[metric] - delta[metric]
+                delta[metric] = self.data[metric]
 
         try:
             """ STATS """
