@@ -28,6 +28,7 @@ ORDER = [
     'open_databases',
     'open_files'
 ]
+
 CHARTS = {
     'authenthentication_cache': {
         'options': [None, 'Authentification cache', 'ratio', '', '', 'stacked'],
