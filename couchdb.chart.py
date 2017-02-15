@@ -19,6 +19,7 @@ ORDER = [
     'authenthentication_cache',
     'continuous_changes_listeners',
     'database_io_statistics',
+    'database_documents_delta',
     'database_documents',
     'database_fragmentation',
     'httpd_methods',
@@ -48,6 +49,16 @@ CHARTS = {
             ['db_writes', 'db writes', 'absolute', 1, 1]
         ]
     },
+    # THIS WILL BE REWRITTEN in near future
+    # ---
+    'database_documents_delta': {
+        'options': [None, 'CouchDB documents', 'documents', '', '', 'stacked'],
+        'lines': [
+            ['docs', 'docs', 'incremental', 1, 1],
+            ['docs_deleted', 'docs_deleted', 'incremental', 1, 1]
+        ]
+    },
+    # ---
     'database_documents': {
         'options': [None, 'CouchDB documents', 'documents', '', '', 'stacked'],
         'lines': [
