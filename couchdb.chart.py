@@ -182,7 +182,7 @@ class Service(SimpleService):
             if metric in delta:
                 if delta[metric] is 0 or \
                    delta[metric] is None or \
-                   delta[metric] < 0:
+                   self.data[metric] < 0:
                     delta[metric] = self.data[metric]
                     return None
                 previous = self.data[metric]
