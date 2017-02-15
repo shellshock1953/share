@@ -178,19 +178,18 @@ class Service(SimpleService):
         for key in self.data.keys():
             self.data[key] = 0
 
-        def calc_delta(metrics):
-            if metric in delta:
-                if delta[metric] is 0 or \
-                   delta[metric] is None or \
-                   self.data[metric] < 0:
+        def calc_delta(*args):
+            for metric in args:
+                if metric in delta:
+                    if delta[metric] is 0 or delta[metric] is None or delta[metric] < 0:
+                        delta[metric] = self.data[metric]
+                        return None
+                    previous = self.data[metric]
+                    self.data[metric] = self.data[metric] - delta[metric]
+                    delta[metric] = previous
+                    previous = 0
+                else:
                     delta[metric] = self.data[metric]
-                    return None
-                previous = self.data[metric]
-                self.data[metric] = self.data[metric] - delta[metric]
-                delta[metric] = previous
-                previous = 0
-            else:
-                delta[metric] = self.data[metric]
 
         try:
             """ STATS """
