@@ -196,10 +196,11 @@ class Service(SimpleService):
             self.data['COPY'] = httpd_methods['COPY']['current']
             self.data['DELETE'] = httpd_methods['DELETE']['current']
             self.data['GET'] = httpd_methods['GET']['current']
-            calc_delta('GET')
             self.data['HEAD'] = httpd_methods['HEAD']['current']
             self.data['POST'] = httpd_methods['POST']['current']
             self.data['PUT'] = httpd_methods['PUT']['current']
+            for metric in ['COPY','DELETE','GET','HEAD','POST','PUT']:
+                calc_delta(metric)
 
             # httpd status codes
             status = doc_stats['httpd_status_codes']
