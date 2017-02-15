@@ -128,7 +128,6 @@ CHARTS = {
 # DELTA
 delta = {}
 
-
 class Service(SimpleService):
     def __init__(self, configuration=None, name=None):
         SimpleService.__init__(self, configuration=configuration, name=name)
