@@ -19,7 +19,6 @@ ORDER = [
     'authenthentication_cache',
     'continuous_changes_listeners',
     'database_io_statistics',
-    'database_documents_delta',
     'database_documents',
     'database_fragmentation',
     'httpd_methods',
@@ -47,13 +46,6 @@ CHARTS = {
         'lines': [
             ['db_reads', 'db reads', 'absolute', 1, 1],
             ['db_writes', 'db writes', 'absolute', 1, 1]
-        ]
-    },
-    'database_documents_delta': {
-        'options': [None, 'CouchDB documents', 'documents', '', '', 'stacked'],
-        'lines': [
-            ['docs_delta', 'docs', 'absolute', 1, 1],
-            ['docs_deleted_delta', 'docs_deleted', 'absolute', 1, 1]
         ]
     },
     'database_documents': {
@@ -178,19 +170,6 @@ class Service(SimpleService):
         for key in self.data.keys():
             self.data[key] = 0
 
-        def calc_delta(*args):
-            for metric in args:
-                if metric in delta:
-                    if delta[metric] is 0 or delta[metric] is None or delta[metric] < 0:
-                        delta[metric] = self.data[metric]
-                        return None
-                    previous = self.data[metric]
-                    self.data[metric] = self.data[metric] - delta[metric]
-                    delta[metric] = previous
-                    previous = 0
-                else:
-                    delta[metric] = self.data[metric]
-
         try:
             """ STATS """
             stats = urllib2.urlopen(self.couch_stats).read()
@@ -204,7 +183,6 @@ class Service(SimpleService):
             self.data['HEAD'] = httpd_methods['HEAD']['current']
             self.data['POST'] = httpd_methods['POST']['current']
             self.data['PUT'] = httpd_methods['PUT']['current']
-            calc_delta('COPY','DELETE','GET','HEAD','POST','PUT')
 
             # httpd status codes
             status = doc_stats['httpd_status_codes']
@@ -221,10 +199,6 @@ class Service(SimpleService):
             self.data['409'] = status['409']['current']
             self.data['412'] = status['412']['current']
             self.data['500'] = status['500']['current']
-            calc_delta(
-                '200','201','202','301','304','400',
-                '401','403','404','405','409','412','500'
-            )
 
             # DB I/O
             couchdb = doc_stats['couchdb']
@@ -265,12 +239,6 @@ class Service(SimpleService):
             # DB documents
             self.data['docs'] = doc_db['doc_count']
             self.data['docs_deleted'] = doc_db['doc_del_count']
-
-            # DB documents
-            self.data['docs_delta'] = doc_db['doc_count']
-            calc_delta('docs_delta')
-            self.data['docs_deleted_delta'] = doc_db['doc_del_count']
-            calc_delta('docs_deleted_delta')
 
             for item in self.data:
                 if self.data[item] is None:
