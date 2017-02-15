@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 # Description: CouchDB statistics netdata python.d module
-
+# import sys
+# sys.path.append('/data/shellshock/install/netdata/python.d/python_modules')
 from base import SimpleService
 
 import json
@@ -130,8 +131,10 @@ delta = {}
 class Service(SimpleService):
     def __init__(self, configuration=None, name=None):
         SimpleService.__init__(self, configuration=configuration, name=name)
-        self.couch_db = configuration['couch_db']
-        self.couch_stats = configuration['couch_stats']
+        #self.couch_db = configuration['couch_db']
+        #self.couch_stats = configuration['couch_stats']
+        self.couch_db = 'http://127.0.0.1:5984/edge_db'
+        self.couch_stats = 'http://127.0.0.1:5984/_stats'
         if len(self.couch_stats) == 0 or len(self.couch_db) == 0:
             raise Exception('Invalid couch')
         self.order = ORDER
@@ -181,10 +184,9 @@ class Service(SimpleService):
 
         def calc_delta(*args):
             for metric in args:
+                if self.data[metric] is None:
+                    self.data[metric] = 0
                 if metric in delta:
-                    if delta[metric] is None:
-                        delta[metric] = self.data[metric]
-                        return None
                     previous = self.data[metric]
                     self.data[metric] = self.data[metric] - delta[metric]
                     delta[metric] = previous
@@ -205,8 +207,7 @@ class Service(SimpleService):
             self.data['HEAD'] = httpd_methods['HEAD']['current']
             self.data['POST'] = httpd_methods['POST']['current']
             self.data['PUT'] = httpd_methods['PUT']['current']
-            # calc_delta('COPY', 'DELETE', 'GET', 'HEAD', 'POST', 'PUT')
-            calc_delta('GET')
+            calc_delta('COPY', 'DELETE', 'GET', 'HEAD', 'POST', 'PUT')
 
             # httpd status codes
             status = doc_stats['httpd_status_codes']
@@ -223,10 +224,10 @@ class Service(SimpleService):
             self.data['409'] = status['409']['current']
             self.data['412'] = status['412']['current']
             self.data['500'] = status['500']['current']
-            # calc_delta(
-            #     '200', '201', '202', '301', '304', '400',
-            #     '401', '403', '404', '405', '409', '412', '500'
-            # )
+            calc_delta(
+                '200', '201', '202', '301', '304', '400',
+                '401', '403', '404', '405', '409', '412', '500'
+            )
 
             # DB I/O
             couchdb = doc_stats['couchdb']
@@ -251,6 +252,7 @@ class Service(SimpleService):
             self.data['view_reads'] = httpd_requests['view_reads']['current']
             self.data['temporary_view_reads'] = httpd_requests[
                 'temporary_view_reads']['current']
+            calc_delta('requests','bulk_requests','view_reads','temporary_view_reads')
 
             # Clients requesting changes
             self.data['clients'] = httpd_requests[
@@ -280,3 +282,8 @@ class Service(SimpleService):
         except (ValueError, AttributeError):
             return self.data
         return self.data
+
+# s = Service(configuration={'update_every': 2, 'priority': 99999, 'retries': 49}, name=None)
+# s._get_data()
+# s._get_data()
+
