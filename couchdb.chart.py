@@ -180,11 +180,11 @@ class Service(SimpleService):
 
         def calc_delta(metric):
             if metric in delta:
-                self.data[metric] = self.data[metric] - delta[metric]
-                delta[metric] = self.data[metric]
-            elif metric not in delta:
-                delta[metric] = self.data[metric]
-            elif metric is 0:
+                previous = self.data[metric]
+                self.data[metric] = delta[metric]
+                delta[metric] = previous
+                previous = 0
+            else:
                 delta[metric] = self.data[metric]
 
         try:
