@@ -194,6 +194,7 @@ class Service(SimpleService):
             self.data['COPY'] = httpd_methods['COPY']['current']
             self.data['DELETE'] = httpd_methods['DELETE']['current']
             self.data['GET'] = httpd_methods['GET']['current']
+            calc_delta('GET')
             self.data['HEAD'] = httpd_methods['HEAD']['current']
             self.data['POST'] = httpd_methods['POST']['current']
             self.data['PUT'] = httpd_methods['PUT']['current']
@@ -229,7 +230,6 @@ class Service(SimpleService):
             self.data['cache_hits'] = couchdb['auth_cache_hits']['current']
             self.data['cache_misses'] = couchdb['auth_cache_misses']['current']
 
-            # Requests
             # Requests
             httpd_requests = doc_stats['httpd']
             self.data['requests'] = httpd_requests['requests']['current']
