@@ -123,10 +123,7 @@ CHARTS = {
 }
 
 # DELTA
-delta = {
-    'docs_delta': 0,
-    'docs_deleted_delta': 0
-}
+delta = {}
 
 
 class Service(SimpleService):
@@ -182,7 +179,7 @@ class Service(SimpleService):
             self.data[key] = 0
 
         def calc_delta(metric):
-            if delta[metric] is 0:
+            if metric not in delta:
                 delta[metric] = self.data[metric]
             else:
                 self.data[metric] = self.data[metric] - delta[metric]
