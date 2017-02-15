@@ -221,6 +221,10 @@ class Service(SimpleService):
             self.data['409'] = status['409']['current']
             self.data['412'] = status['412']['current']
             self.data['500'] = status['500']['current']
+            calc_delta(
+                '200','201','202','301','304','400',
+                '401','403','404','405','409','412','500'
+            )
 
             # DB I/O
             couchdb = doc_stats['couchdb']
