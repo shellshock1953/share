@@ -19,6 +19,7 @@ ORDER = [
     'authenthentication_cache',
     'continuous_changes_listeners',
     'database_io_statistics',
+    'database_documents_delta',
     'database_documents',
     'database_fragmentation',
     'httpd_methods',
@@ -46,6 +47,13 @@ CHARTS = {
         'lines': [
             ['db_reads', 'db reads', 'absolute', 1, 1],
             ['db_writes', 'db writes', 'absolute', 1, 1]
+        ]
+    },
+    'database_documents_delta': {
+        'options': [None, 'CouchDB documents', 'documents', '', '', 'stacked'],
+        'lines': [
+            ['docs_delta', 'docs', 'absolute', 1, 1],
+            ['docs_deleted_delta', 'docs_deleted', 'absolute', 1, 1]
         ]
     },
     'database_documents': {
@@ -114,6 +122,12 @@ CHARTS = {
     }
 }
 
+# DELTA
+delta = {
+    'docs_delta': 0,
+    'docs_deleted_delta': 0
+}
+
 
 class Service(SimpleService):
     def __init__(self, configuration=None, name=None):
@@ -153,6 +167,8 @@ class Service(SimpleService):
             'clients': 0,
             'docs': 0,
             'docs_deleted': 0,
+            'docs_delta': 0,
+            'docs_deleted_delta': 0,
             'requests': 0,
             'bulk_requests': 0,
             'view_reads': 0,
@@ -235,6 +251,12 @@ class Service(SimpleService):
             # DB documents
             self.data['docs'] = doc_db['doc_count']
             self.data['docs_deleted'] = doc_db['doc_del_count']
+
+            # DB documents
+            self.data['docs_delta'] = doc_db['doc_count'] - delta['docs_delta']
+            delta['docs_delta'] = self.data['docs_delta']
+            self.data['docs_deleted_delta'] = doc_db['doc_del_count'] - delta['docs_deleted_delta']
+            delta['docs_deleted'] = self.data['docs_deleted_delta']
 
             for item in self.data:
                 if self.data[item] is None:
