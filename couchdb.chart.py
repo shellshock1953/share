@@ -178,18 +178,18 @@ class Service(SimpleService):
         for key in self.data.keys():
             self.data[key] = 0
 
-        def calc_delta(*args):
-            for metric in args:
-                if metric in delta:
-                    if delta[metric] is 0 or delta[metric] is None:
-                        delta[metric] = self.data[metric]
-                        return None
-                    previous = self.data[metric]
-                    self.data[metric] = self.data[metric] - delta[metric]
-                    delta[metric] = previous
-                    previous = 0
-                else: # metric is not in delta{}
+        def calc_delta(metrics):
+            if metric in delta:
+                if delta[metric] is 0 or \
+                   delta[metric] is None:
                     delta[metric] = self.data[metric]
+                    return None
+                previous = self.data[metric]
+                self.data[metric] = self.data[metric] - delta[metric]
+                delta[metric] = previous
+                previous = 0
+            else:
+                delta[metric] = self.data[metric]
 
         try:
             """ STATS """
@@ -204,7 +204,8 @@ class Service(SimpleService):
             self.data['HEAD'] = httpd_methods['HEAD']['current']
             self.data['POST'] = httpd_methods['POST']['current']
             self.data['PUT'] = httpd_methods['PUT']['current']
-            calc_delta('COPY','DELETE','GET','HEAD','POST','PUT')
+            for metric in ['COPY','DELETE','GET','HEAD','POST','PUT']:
+                calc_delta(metric)
 
             # httpd status codes
             status = doc_stats['httpd_status_codes']
