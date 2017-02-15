@@ -182,7 +182,7 @@ class Service(SimpleService):
         def calc_delta(*args):
             for metric in args:
                 if metric in delta:
-                    if delta[metric] is 0 or delta[metric] is None:
+                    if delta[metric] is None:
                         delta[metric] = self.data[metric]
                         return None
                     previous = self.data[metric]
@@ -205,7 +205,8 @@ class Service(SimpleService):
             self.data['HEAD'] = httpd_methods['HEAD']['current']
             self.data['POST'] = httpd_methods['POST']['current']
             self.data['PUT'] = httpd_methods['PUT']['current']
-            calc_delta('COPY', 'DELETE', 'GET', 'HEAD', 'POST', 'PUT')
+            # calc_delta('COPY', 'DELETE', 'GET', 'HEAD', 'POST', 'PUT')
+            calc_delta('GET')
 
             # httpd status codes
             status = doc_stats['httpd_status_codes']
@@ -222,10 +223,10 @@ class Service(SimpleService):
             self.data['409'] = status['409']['current']
             self.data['412'] = status['412']['current']
             self.data['500'] = status['500']['current']
-            calc_delta(
-                '200', '201', '202', '301', '304', '400',
-                '401', '403', '404', '405', '409', '412', '500'
-            )
+            # calc_delta(
+            #     '200', '201', '202', '301', '304', '400',
+            #     '401', '403', '404', '405', '409', '412', '500'
+            # )
 
             # DB I/O
             couchdb = doc_stats['couchdb']
