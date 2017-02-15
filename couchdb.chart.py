@@ -181,7 +181,8 @@ class Service(SimpleService):
         def calc_delta(metrics):
             if metric in delta:
                 if delta[metric] is 0 or \
-                   delta[metric] is None:
+                   delta[metric] is None or \
+                   delta[metric] < 0:
                     delta[metric] = self.data[metric]
                     return None
                 previous = self.data[metric]
