@@ -239,7 +239,7 @@ class Service(SimpleService):
             self.data['db_writes'] = couchdb['database_writes']['current']
             self.data['db_reads_delta'] = couchdb['database_reads']['current']
             self.data['db_writes_delta'] = couchdb['database_writes']['current']
-            calc_delta('db_reads_delta','db_writes_delta')
+            calc_delta('db_reads_delta', 'db_writes_delta')
 
             # open DBs
             self.data['dbs'] = couchdb['open_databases']['current']
@@ -281,7 +281,7 @@ class Service(SimpleService):
             self.data['docs_delta'] = doc_db['doc_count']
             calc_delta('docs_delta')
             self.data['docs_deleted_delta'] = doc_db['doc_del_count']
-            calc_delta('docs_delta','docs_deleted_delta')
+            calc_delta('docs_delta', 'docs_deleted_delta')
 
             for item in self.data:
                 if self.data[item] is None:
