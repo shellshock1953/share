@@ -193,9 +193,9 @@ class Service(SimpleService):
                 if self.data[metric] is None: self.data[metric] = 0
                 if metric in delta:
                     # prevent negative values
-                    # if self.data[metric] < delta[metric]:
-                    #     delta[metric] = 0
-                    #     return None
+                    if self.data[metric] < delta[metric]:
+                        delta[metric] = 0
+                        return None
                     previous = self.data[metric]
                     self.data[metric] = self.data[metric] - delta[metric]
                     delta[metric] = previous
