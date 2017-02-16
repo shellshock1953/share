@@ -182,6 +182,7 @@ class Service(SimpleService):
             self.data[key] = 0
 
         def calc_delta(*args):
+            #TODO negative values
             for metric in args:
                 if self.data[metric] is None: self.data[metric] = 0
                 if metric in delta:
