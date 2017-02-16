@@ -130,10 +130,10 @@ delta = {}
 class Service(SimpleService):
     def __init__(self, configuration=None, name=None):
         SimpleService.__init__(self, configuration=configuration, name=name)
-        self.couch_db = configuration['couch_db']
-        self.couch_stats = configuration['couch_stats']
-        # self.couch_db = 'http://127.0.0.1:5984/edge_db'
-        # self.couch_stats = 'http://127.0.0.1:5984/_stats'
+        # self.couch_db = configuration['couch_db']
+        # self.couch_stats = configuration['couch_stats']
+        self.couch_db = 'http://127.0.0.1:5984/edge_db'
+        self.couch_stats = 'http://127.0.0.1:5984/_stats'
         if len(self.couch_stats) == 0 or len(self.couch_db) == 0:
             raise Exception('Invalid couch')
         self.order = ORDER
@@ -186,6 +186,10 @@ class Service(SimpleService):
             for metric in args:
                 if self.data[metric] is None: self.data[metric] = 0
                 if metric in delta:
+                    # prevent negative values
+                    if self.data[metric] < delta[metric]:
+                        delta[metric] = 0
+                        return None
                     previous = self.data[metric]
                     self.data[metric] = self.data[metric] - delta[metric]
                     delta[metric] = previous
@@ -282,9 +286,11 @@ class Service(SimpleService):
         return self.data
 
 # s = Service(configuration={'update_every': 2, 'priority': 99999, 'retries': 49}, name=None)
-# s._get_data()
-# s._get_data()
-
-# s = Service(configuration={'update_every': 2, 'priority': 99999, 'retries': 49}, name=None)
-# s._get_data()
-# s._get_data()
+# d = s._get_data()
+# print d['docs_delta']
+# d = s._get_data()
+# print d['docs_delta']
+# d = s._get_data()
+# print d['docs_delta']
+# d = s._get_data()
+# print d['docs_delta']
