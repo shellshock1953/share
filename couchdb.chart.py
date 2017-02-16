@@ -1,7 +1,5 @@
 # -*- coding: utf-8 -*-
 # Description: CouchDB statistics netdata python.d module
-# import sys
-# sys.path.append('/data/shellshock/install/netdata/python.d/python_modules')
 from base import SimpleService
 
 import json
@@ -19,6 +17,7 @@ ORDER = [
     # 'active_tasks',
     'authenthentication_cache',
     'continuous_changes_listeners',
+    'database_io_statistics_delta',
     'database_io_statistics',
     'database_documents_delta',
     'database_documents',
@@ -32,48 +31,55 @@ ORDER = [
 
 CHARTS = {
     'authenthentication_cache': {
-        'options': [None, 'Authentification cache', 'ratio', '', '', 'stacked'],
+        'options': [None, 'Authentification cache', 'ratio', '', '', 'line'],
         'lines': [
             ['cache_hits', 'cache hits', 'absolute', 1, 1],
             ['cache_misses', 'cache misses', 'absolute', 1, 1]
         ]
     },
     'continuous_changes_listeners': {
-        'options': [None, 'CouchDB continuous changes listeners', 'clients', '', '', 'stacked'],
+        'options': [None, 'CouchDB continuous changes listeners', 'clients', '', '', 'line'],
         'lines': [
             ['clients', 'clients for continuous changes', 'absolute', 1, 1]
         ]
     },
+    'database_io_statistics_delta': {
+        'options': [None, 'I/O statistics', 'reads/writes', '', '', 'line'],
+        'lines': [
+            ['db_reads_delta', 'db reads', 'absolute', 1, 1],
+            ['db_writes_delta', 'db writes', 'absolute', 1, 1]
+        ]
+    },
     'database_io_statistics': {
-        'options': [None, 'I/O statistics', 'reads/writes', '', '', 'stacked'],
+        'options': [None, 'I/O statistics', 'reads/writes', '', '', 'line'],
         'lines': [
             ['db_reads', 'db reads', 'absolute', 1, 1],
             ['db_writes', 'db writes', 'absolute', 1, 1]
         ]
     },
     'database_documents_delta': {
-        'options': [None, 'CouchDB documents', 'documents', '', '', 'stacked'],
+        'options': [None, 'CouchDB documents', 'documents', '', '', 'line'],
         'lines': [
             ['docs_delta', 'docs', 'absolute', 1, 1],
             ['docs_deleted_delta', 'docs_deleted', 'absolute', 1, 1]
         ]
     },
     'database_documents': {
-        'options': [None, 'CouchDB documents', 'documents', '', '', 'stacked'],
+        'options': [None, 'CouchDB documents', 'documents', '', '', 'line'],
         'lines': [
             ['docs', 'docs', 'absolute', 1, 1],
             ['docs_deleted', 'docs_deleted', 'absolute', 1, 1]
         ]
     },
     'database_fragmentation': {
-        'options': [None, 'Database fragmentation', 'Megabytes', '', '', 'stacked'],
+        'options': [None, 'Database fragmentation', 'Megabytes', '', '', 'line'],
         'lines': [
             ['disk_size_overhead', 'disk size overhead', 'absolute', 1, 1],
             ['data_size', 'data size', 'absolute', 1, 1]
         ]
     },
     'httpd_methods': {
-        'options': [None, 'Httpd request methods', 'requests', '', '', 'stacked'],
+        'options': [None, 'Httpd request methods', 'requests', '', '', 'line'],
         'lines': [
             ['COPY', 'COPY', 'absolute', 1, 1],
             ['DELETE', 'DELETE', 'absolute', 1, 1],
@@ -84,7 +90,7 @@ CHARTS = {
         ]
     },
     'httpd_requests': {
-        'options': [None, 'CouchDB httpd requests', 'documents', '', '', 'stacked'],
+        'options': [None, 'CouchDB httpd requests', 'documents', '', '', 'line'],
         'lines': [
             ['requests', 'requests', 'absolute', 1, 1],
             ['bulk_requests', 'bulk_requests', 'absolute', 1, 1],
@@ -93,7 +99,7 @@ CHARTS = {
         ]
     },
     'status_codes': {
-        'options': [None, 'Status codes queries', 'requests', '', '', 'stacked'],
+        'options': [None, 'Status codes queries', 'requests', '', '', 'line'],
         'lines': [
             ['200', '200 queries', 'absolute', 1, 1],
             ['201', '201 queries', 'absolute', 1, 1],
@@ -111,13 +117,13 @@ CHARTS = {
         ]
     },
     'open_databases': {
-        'options': [None, 'CouchDB open databases', 'databases', '', '', 'stacked'],
+        'options': [None, 'CouchDB open databases', 'databases', '', '', 'line'],
         'lines': [
             ['dbs', 'databases', 'absolute', 1, 1],
         ]
     },
     'open_files': {
-        'options': [None, 'CouchDB open files', 'files', '', '', 'stacked'],
+        'options': [None, 'CouchDB open files', 'files', '', '', 'line'],
         'lines': [
             ['files', 'files', 'absolute', 1, 1],
         ]
@@ -127,13 +133,12 @@ CHARTS = {
 # DELTA
 delta = {}
 
+
 class Service(SimpleService):
     def __init__(self, configuration=None, name=None):
         SimpleService.__init__(self, configuration=configuration, name=name)
-        # self.couch_db = configuration['couch_db']
-        # self.couch_stats = configuration['couch_stats']
-        self.couch_db = 'http://127.0.0.1:5984/edge_db'
-        self.couch_stats = 'http://127.0.0.1:5984/_stats'
+        self.couch_db = configuration['couch_db']
+        self.couch_stats = configuration['couch_stats']
         if len(self.couch_stats) == 0 or len(self.couch_db) == 0:
             raise Exception('Invalid couch')
         self.order = ORDER
@@ -162,6 +167,8 @@ class Service(SimpleService):
             'PUT': 0,
             'data_size': 0,
             'disk_size_overhead': 0,
+            'db_reads_delta': 0,
+            'db_writes_delta': 0,
             'db_reads': 0,
             'db_writes': 0,
             'clients': 0,
@@ -182,14 +189,13 @@ class Service(SimpleService):
             self.data[key] = 0
 
         def calc_delta(*args):
-            #TODO negative values
             for metric in args:
                 if self.data[metric] is None: self.data[metric] = 0
                 if metric in delta:
                     # prevent negative values
-                    if self.data[metric] < delta[metric]:
-                        delta[metric] = 0
-                        return None
+                    # if self.data[metric] < delta[metric]:
+                    #     delta[metric] = 0
+                    #     return None
                     previous = self.data[metric]
                     self.data[metric] = self.data[metric] - delta[metric]
                     delta[metric] = previous
@@ -235,6 +241,9 @@ class Service(SimpleService):
             couchdb = doc_stats['couchdb']
             self.data['db_reads'] = couchdb['database_reads']['current']
             self.data['db_writes'] = couchdb['database_writes']['current']
+            self.data['db_reads_delta'] = couchdb['database_reads']['current']
+            self.data['db_writes_delta'] = couchdb['database_writes']['current']
+            calc_delta('db_reads_delta', 'db_writes_delta')
 
             # open DBs
             self.data['dbs'] = couchdb['open_databases']['current']
@@ -276,7 +285,7 @@ class Service(SimpleService):
             self.data['docs_delta'] = doc_db['doc_count']
             calc_delta('docs_delta')
             self.data['docs_deleted_delta'] = doc_db['doc_del_count']
-            calc_delta('docs_deleted_delta')
+            calc_delta('docs_delta', 'docs_deleted_delta')
 
             for item in self.data:
                 if self.data[item] is None:
@@ -284,13 +293,3 @@ class Service(SimpleService):
         except (ValueError, AttributeError):
             return self.data
         return self.data
-
-# s = Service(configuration={'update_every': 2, 'priority': 99999, 'retries': 49}, name=None)
-# d = s._get_data()
-# print d['docs_delta']
-# d = s._get_data()
-# print d['docs_delta']
-# d = s._get_data()
-# print d['docs_delta']
-# d = s._get_data()
-# print d['docs_delta']
