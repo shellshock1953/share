@@ -13,4 +13,6 @@ lite-public:
 ```
 lite-public:
  couch_tsk: 'http://0.0.0.0:5984/_active_tasks'
+ couch_dbs: [edge_db,public_sandbox,shellshock]
 ```
+
