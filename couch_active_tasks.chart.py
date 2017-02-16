@@ -59,10 +59,10 @@ CHARTS = {
 class Service(SimpleService):
     def __init__(self, configuration=None, name=None):
         SimpleService.__init__(self, configuration=configuration, name=name)
-        self.couch_dbs = configuration['couch_dbs']
+        # self.couch_dbs = configuration['couch_dbs']
         # self.couch_tsk = configuration['couch_tsk']
         self.couch_tsk = 'http://127.0.0.1:5984/_active_tasks'
-        # self.couch_dbs = 'http://127.0.0.1:5984/_all_dbs'
+        self.couch_dbs = 'http://127.0.0.1:5984/_all_dbs'
         if len(self.couch_tsk) is 0:
             raise Exception('Invalid couch url')
         self.order = ORDER
@@ -96,7 +96,7 @@ class Service(SimpleService):
                 'replication'
             ]
 
-            # inialize db tasks
+            # init db tasks
             for available_db in all_dbs:
                 for available_task in tasks_to_monitor:
                     self.data[available_task + '_' + available_db] = 0
@@ -105,6 +105,15 @@ class Service(SimpleService):
             # DEBUG
             # doc = self.couch_tsk.read()
             running_tasks = json.loads(doc)
+
+            # init 1st graph: count of all runnting tasks
+            for available_task in tasks_to_monitor:
+                for current_running_task in running_tasks:
+                    task_name = current_running_task['type']
+                    if task_name == available_task:
+                        self.data[task_name+'_task'] += 1
+
+            # init other graphs: DBs per task
             for available_db in all_dbs:
                 for current_running_task in running_tasks:
                     # try:
@@ -119,11 +128,8 @@ class Service(SimpleService):
                     task_name = current_running_task['type']
                     chart_name = task_name + '_' + available_db
                     CHARTS[task_name]['lines'].append([chart_name, available_db, 'absolute', 1, 1])
+                    self.data[task_name + '_' + available_db] += 1
 
-            for available_task in tasks_to_monitor:
-                if task_name == available_task:
-                    self.data[available_task + '_' + db] += 1
-                    self.data[task_name+'_task'] += 1
 
         except (ValueError, AttributeError):
             return None
