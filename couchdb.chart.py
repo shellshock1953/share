@@ -17,6 +17,7 @@ ORDER = [
     # 'active_tasks',
     'authenthentication_cache',
     'continuous_changes_listeners',
+    'database_io_statistics_delta',
     'database_io_statistics',
     'database_documents_delta',
     'database_documents',
@@ -40,6 +41,13 @@ CHARTS = {
         'options': [None, 'CouchDB continuous changes listeners', 'clients', '', '', 'line'],
         'lines': [
             ['clients', 'clients for continuous changes', 'absolute', 1, 1]
+        ]
+    },
+    'database_io_statistics_delta': {
+        'options': [None, 'I/O statistics', 'reads/writes', '', '', 'line'],
+        'lines': [
+            ['db_reads_delta', 'db reads', 'absolute', 1, 1],
+            ['db_writes_delta', 'db writes', 'absolute', 1, 1]
         ]
     },
     'database_io_statistics': {
@@ -159,6 +167,8 @@ class Service(SimpleService):
             'PUT': 0,
             'data_size': 0,
             'disk_size_overhead': 0,
+            'db_reads_delta': 0,
+            'db_writes_delta': 0,
             'db_reads': 0,
             'db_writes': 0,
             'clients': 0,
@@ -227,6 +237,9 @@ class Service(SimpleService):
             couchdb = doc_stats['couchdb']
             self.data['db_reads'] = couchdb['database_reads']['current']
             self.data['db_writes'] = couchdb['database_writes']['current']
+            self.data['db_reads_delta'] = couchdb['database_reads']['current']
+            self.data['db_writes_delta'] = couchdb['database_writes']['current']
+            calc_delta('db_reads_delta','db_writes_delta')
 
             # open DBs
             self.data['dbs'] = couchdb['open_databases']['current']
@@ -268,7 +281,7 @@ class Service(SimpleService):
             self.data['docs_delta'] = doc_db['doc_count']
             calc_delta('docs_delta')
             self.data['docs_deleted_delta'] = doc_db['doc_del_count']
-            calc_delta('docs_deleted_delta')
+            calc_delta('docs_delta','docs_deleted_delta')
 
             for item in self.data:
                 if self.data[item] is None:
