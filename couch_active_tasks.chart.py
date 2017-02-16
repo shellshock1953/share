@@ -97,6 +97,7 @@ class Service(SimpleService):
             # init DBs per task presentation
             for monitoring_task in tasks_to_monitor:
                 for db in all_dbs:
+                    if db[0] == '_': continue
                     self.data[monitoring_task+'_'+db] = 0
                     CHARTS[monitoring_task]['lines'].append([monitoring_task+'_'+db, db, 'absolute', 1, 1])
 
@@ -108,6 +109,7 @@ class Service(SimpleService):
 
             # calculate dbs per task
             for db in all_dbs:
+                if db[0] == '_': continue
                 for active_task in active_tasks:
                     try: active_task_database = active_task['database']
                     except KeyError:
