@@ -21,7 +21,7 @@ ORDER = [
 CHARTS = {
     # show number of each running tasks
     'active_tasks': {
-        'options': [None, 'Active tasks', 'tasks', '', '', 'line'],
+        'options': [None, 'Active tasks', 'tasks', 'Active tasks', '', 'line'],
         'lines': [
             # available tasks
             ['indexer_task', 'indexer', 'absolute', 1, 1],
@@ -34,19 +34,19 @@ CHARTS = {
     # empty lines because of dynamic chart creation
     # we dont know what dbs we will use
     'indexer': {
-        'options': [None, 'Indexer tasks', 'tasks', '', '', 'line'],
+        'options': [None, 'Indexer task', 'tasks', 'Indexer task', '', 'line'],
         'lines': []
     },
     'database_compaction': {
-        'options': [None, 'Indexer tasks', 'tasks', '', '', 'line'],
+        'options': [None, 'DB compaction task', 'tasks', 'DB compaction task', '', 'line'],
         'lines': []
     },
     'view_compaction': {
-        'options': [None, 'Indexer tasks', 'tasks', '', '', 'line'],
+        'options': [None, 'View compaction task', 'tasks', 'View compaction task', '', 'line'],
         'lines': []
     },
     'replication': {
-        'options': [None, 'Indexer tasks', 'tasks', '', '', 'line'],
+        'options': [None, 'Replication task', 'tasks', 'Replication task', '', 'line'],
         'lines': []
     }
 }

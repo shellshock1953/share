@@ -32,55 +32,55 @@ ORDER = [
 
 CHARTS = {
     'authenthentication_cache': {
-        'options': [None, 'Authentification cache', 'ratio', '', '', 'line'],
+        'options': [None, 'Authentification cache', 'ratio', 'Authentification cache', '', 'line'],
         'lines': [
             ['cache_hits', 'cache hits', 'absolute', 1, 1],
             ['cache_misses', 'cache misses', 'absolute', 1, 1]
         ]
     },
     'continuous_changes_listeners': {
-        'options': [None, 'CouchDB continuous changes listeners', 'clients', '', '', 'line'],
+        'options': [None, 'Continuous changes listeners', 'clients', 'Continuous changes listeners', '', 'line'],
         'lines': [
             ['clients', 'clients for continuous changes', 'absolute', 1, 1]
         ]
     },
     'database_io_statistics_delta': {
-        'options': [None, 'I/O statistics', 'reads/writes', '', '', 'line'],
+        'options': [None, 'I/O statistics', 'reads/writes', 'I/O statistics', '', 'line'],
         'lines': [
             ['db_reads_delta', 'db reads', 'absolute', 1, 1],
             ['db_writes_delta', 'db writes', 'absolute', 1, 1]
         ]
     },
     'database_io_statistics': {
-        'options': [None, 'I/O statistics', 'reads/writes', '', '', 'line'],
+        'options': [None, 'I/O statistics', 'reads/writes', 'I/O statistics', '', 'line'],
         'lines': [
             ['db_reads', 'db reads', 'absolute', 1, 1],
             ['db_writes', 'db writes', 'absolute', 1, 1]
         ]
     },
     'database_documents_delta': {
-        'options': [None, 'CouchDB documents', 'documents', '', '', 'line'],
+        'options': [None, 'Documents', 'documents', 'Documents delta', '', 'line'],
         'lines': [
             ['docs_delta', 'docs', 'absolute', 1, 1],
             ['docs_deleted_delta', 'docs_deleted', 'absolute', 1, 1]
         ]
     },
     'database_documents': {
-        'options': [None, 'CouchDB documents', 'documents', '', '', 'line'],
+        'options': [None, 'Documents', 'documents', 'Documents', '', 'line'],
         'lines': [
             ['docs', 'docs', 'absolute', 1, 1],
             ['docs_deleted', 'docs_deleted', 'absolute', 1, 1]
         ]
     },
     'database_fragmentation': {
-        'options': [None, 'Database fragmentation', 'Megabytes', '', '', 'line'],
+        'options': [None, 'DB fragmentation', 'Megabytes', 'DB fragmentation', '', 'line'],
         'lines': [
             ['disk_size_overhead', 'disk size overhead', 'absolute', 1, 1],
             ['data_size', 'data size', 'absolute', 1, 1]
         ]
     },
     'httpd_methods': {
-        'options': [None, 'Httpd request methods', 'requests', '', '', 'line'],
+        'options': [None, 'Request methods', 'requests', 'Request methods', '', 'line'],
         'lines': [
             ['COPY', 'COPY', 'absolute', 1, 1],
             ['DELETE', 'DELETE', 'absolute', 1, 1],
@@ -91,7 +91,7 @@ CHARTS = {
         ]
     },
     'httpd_requests': {
-        'options': [None, 'CouchDB httpd requests', 'documents', '', '', 'line'],
+        'options': [None, 'Requests', 'documents', 'Requests', '', 'line'],
         'lines': [
             ['requests', 'requests', 'absolute', 1, 1],
             ['bulk_requests', 'bulk_requests', 'absolute', 1, 1],
@@ -100,7 +100,7 @@ CHARTS = {
         ]
     },
     'status_codes': {
-        'options': [None, 'Status codes queries', 'requests', '', '', 'line'],
+        'options': [None, 'Status codes queries', 'requests', 'Status codes queries', '', 'line'],
         'lines': [
             ['200', '200 queries', 'absolute', 1, 1],
             ['201', '201 queries', 'absolute', 1, 1],
@@ -118,13 +118,13 @@ CHARTS = {
         ]
     },
     'open_databases': {
-        'options': [None, 'CouchDB open databases', 'databases', '', '', 'line'],
+        'options': [None, 'Open databases', 'databases', 'Open databases', '', 'line'],
         'lines': [
             ['dbs', 'databases', 'absolute', 1, 1],
         ]
     },
     'open_files': {
-        'options': [None, 'CouchDB open files', 'files', '', '', 'line'],
+        'options': [None, 'Open files', 'files', 'Open files', '', 'line'],
         'lines': [
             ['files', 'files', 'absolute', 1, 1],
         ]
