@@ -30,48 +30,48 @@ ORDER = [
 
 CHARTS = {
     'authenthentication_cache': {
-        'options': [None, 'Authentification cache', 'ratio', '', '', 'stacked'],
+        'options': [None, 'Authentification cache', 'ratio', '', '', 'line'],
         'lines': [
             ['cache_hits', 'cache hits', 'absolute', 1, 1],
             ['cache_misses', 'cache misses', 'absolute', 1, 1]
         ]
     },
     'continuous_changes_listeners': {
-        'options': [None, 'CouchDB continuous changes listeners', 'clients', '', '', 'stacked'],
+        'options': [None, 'CouchDB continuous changes listeners', 'clients', '', '', 'line'],
         'lines': [
             ['clients', 'clients for continuous changes', 'absolute', 1, 1]
         ]
     },
     'database_io_statistics': {
-        'options': [None, 'I/O statistics', 'reads/writes', '', '', 'stacked'],
+        'options': [None, 'I/O statistics', 'reads/writes', '', '', 'line'],
         'lines': [
             ['db_reads', 'db reads', 'absolute', 1, 1],
             ['db_writes', 'db writes', 'absolute', 1, 1]
         ]
     },
     'database_documents_delta': {
-        'options': [None, 'CouchDB documents', 'documents', '', '', 'stacked'],
+        'options': [None, 'CouchDB documents', 'documents', '', '', 'line'],
         'lines': [
             ['docs_delta', 'docs', 'absolute', 1, 1],
             ['docs_deleted_delta', 'docs_deleted', 'absolute', 1, 1]
         ]
     },
     'database_documents': {
-        'options': [None, 'CouchDB documents', 'documents', '', '', 'stacked'],
+        'options': [None, 'CouchDB documents', 'documents', '', '', 'line'],
         'lines': [
             ['docs', 'docs', 'absolute', 1, 1],
             ['docs_deleted', 'docs_deleted', 'absolute', 1, 1]
         ]
     },
     'database_fragmentation': {
-        'options': [None, 'Database fragmentation', 'Megabytes', '', '', 'stacked'],
+        'options': [None, 'Database fragmentation', 'Megabytes', '', '', 'line'],
         'lines': [
             ['disk_size_overhead', 'disk size overhead', 'absolute', 1, 1],
             ['data_size', 'data size', 'absolute', 1, 1]
         ]
     },
     'httpd_methods': {
-        'options': [None, 'Httpd request methods', 'requests', '', '', 'stacked'],
+        'options': [None, 'Httpd request methods', 'requests', '', '', 'line'],
         'lines': [
             ['COPY', 'COPY', 'absolute', 1, 1],
             ['DELETE', 'DELETE', 'absolute', 1, 1],
@@ -82,7 +82,7 @@ CHARTS = {
         ]
     },
     'httpd_requests': {
-        'options': [None, 'CouchDB httpd requests', 'documents', '', '', 'stacked'],
+        'options': [None, 'CouchDB httpd requests', 'documents', '', '', 'line'],
         'lines': [
             ['requests', 'requests', 'absolute', 1, 1],
             ['bulk_requests', 'bulk_requests', 'absolute', 1, 1],
@@ -91,7 +91,7 @@ CHARTS = {
         ]
     },
     'status_codes': {
-        'options': [None, 'Status codes queries', 'requests', '', '', 'stacked'],
+        'options': [None, 'Status codes queries', 'requests', '', '', 'line'],
         'lines': [
             ['200', '200 queries', 'absolute', 1, 1],
             ['201', '201 queries', 'absolute', 1, 1],
@@ -109,13 +109,13 @@ CHARTS = {
         ]
     },
     'open_databases': {
-        'options': [None, 'CouchDB open databases', 'databases', '', '', 'stacked'],
+        'options': [None, 'CouchDB open databases', 'databases', '', '', 'line'],
         'lines': [
             ['dbs', 'databases', 'absolute', 1, 1],
         ]
     },
     'open_files': {
-        'options': [None, 'CouchDB open files', 'files', '', '', 'stacked'],
+        'options': [None, 'CouchDB open files', 'files', '', '', 'line'],
         'lines': [
             ['files', 'files', 'absolute', 1, 1],
         ]
@@ -124,6 +124,7 @@ CHARTS = {
 
 # DELTA
 delta = {}
+
 
 class Service(SimpleService):
     def __init__(self, configuration=None, name=None):
