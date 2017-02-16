@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
 # Description: CouchDB statistics netdata python.d module
+import sys
+sys.path.append('/data/shellshock/install/netdata/python.d/python_modules')
 from base import SimpleService
 
 import json
@@ -137,8 +139,10 @@ delta = {}
 class Service(SimpleService):
     def __init__(self, configuration=None, name=None):
         SimpleService.__init__(self, configuration=configuration, name=name)
-        self.couch_db = configuration['couch_db']
-        self.couch_stats = configuration['couch_stats']
+        # self.couch_db = configuration['couch_db']
+        # self.couch_stats = configuration['couch_stats']
+        self.couch_db = 'http://127.0.0.1:5984/edge_db'
+        self.couch_stats = 'http://127.0.0.1:5984/_stats'
         if len(self.couch_stats) == 0 or len(self.couch_db) == 0:
             raise Exception('Invalid couch')
         self.order = ORDER
@@ -293,3 +297,7 @@ class Service(SimpleService):
         except (ValueError, AttributeError):
             return self.data
         return self.data
+
+s = Service(configuration={'priority':60000,'retries':60,'update_every':1},name=None)
+d = s._get_data()
+print d
