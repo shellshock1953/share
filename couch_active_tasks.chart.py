@@ -105,19 +105,20 @@ class Service(SimpleService):
             # DEBUG
             # doc = self.couch_tsk.read()
             running_tasks = json.loads(doc)
-            for current_running_task in running_tasks:
-                try:
-                    db = current_running_task['database']
-                except KeyError:
-                    if '/' in current_running_task['target']:
-                        db_str = current_running_task['target']
-                        db = db_str.split('/')[3]
-                    else:
-                        db = current_running_task['target']
+            for available_db in all_dbs:
+                for current_running_task in running_tasks:
+                    # try:
+                    #     db = current_running_task['database']
+                    # except KeyError:
+                    #     if '/' in current_running_task['target']:
+                    #         db_str = current_running_task['target']
+                    #         db = db_str.split('/')[3]
+                    #     else:
+                    #         db = current_running_task['target']
 
-                task_name = current_running_task['type']
-                chart_name = task_name + '_' + db
-                CHARTS[task_name]['lines'].append([chart_name, db, 'absolute', 1, 1])
+                    task_name = current_running_task['type']
+                    chart_name = task_name + '_' + available_db
+                    CHARTS[task_name]['lines'].append([chart_name, available_db, 'absolute', 1, 1])
 
             for available_task in tasks_to_monitor:
                 if task_name == available_task:
