@@ -1,7 +1,3 @@
-# DEBUG
-# import sys
-# sys.path.append('/data/shellshock/install/netdata/python.d/python_modules')
-
 from base import SimpleService
 import json
 
@@ -59,10 +55,8 @@ CHARTS = {
 class Service(SimpleService):
     def __init__(self, configuration=None, name=None):
         SimpleService.__init__(self, configuration=configuration, name=name)
-        # self.couch_tsk = configuration['couch_tsk']
-        # self.couch_dbs = configuration['couch_dbs']
-        self.couch_tsk = 'http://127.0.0.1:5984/_active_tasks'
-        self.couch_dbs = 'http://127.0.0.1:5984/_all_dbs'
+        self.couch_tsk = configuration['couch_tsk']
+        self.couch_dbs = configuration['couch_dbs']
         if len(self.couch_tsk) is 0:
             raise Exception('Invalid couch url')
         self.order = ORDER
@@ -120,6 +114,3 @@ class Service(SimpleService):
         except (ValueError, AttributeError):
             return None
         return self.data
-
-# s = Service(configuration={'priority': priority, 'retries': retries, 'update_every': update_every}, name=None)
-# d = s._get_data()
