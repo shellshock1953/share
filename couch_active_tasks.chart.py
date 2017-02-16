@@ -90,12 +90,9 @@ class Service(SimpleService):
             all_dbs_url = urllib2.urlopen(self.couch_dbs).read()
             all_dbs = json.loads(all_dbs_url)
 
-            # init task presentation
+            # init task and DBs per task presentation
             for monitoring_task in tasks_to_monitor:
                 self.data[monitoring_task + '_task'] = 0
-
-            # init DBs per task presentation
-            for monitoring_task in tasks_to_monitor:
                 for db in all_dbs:
                     if db[0] == '_': continue
                     self.data[monitoring_task+'_'+db] = 0
