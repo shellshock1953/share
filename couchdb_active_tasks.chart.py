@@ -55,8 +55,7 @@ CHARTS = {
 class Service(SimpleService):
     def __init__(self, configuration=None, name=None):
         SimpleService.__init__(self, configuration=configuration, name=name)
-        self.couch_tsk = configuration['couch_url'] + '_active_tasks'
-        self.couch_dbs = configuration['couch_url'] + '_all_dbs'
+        self.couch_url = configuration['couch_url']
         if len(self.couch_tsk) is 0:
             raise Exception('Invalid couch url')
         self.order = ORDER
@@ -78,10 +77,10 @@ class Service(SimpleService):
                 self.data[key] = 0
 
             # open active tasks urls
-            active_tasks_url = urllib2.urlopen(self.couch_tsk).read()
+            active_tasks_url = urllib2.urlopen(self.couch_url+'_active_task').read()
             active_tasks = json.loads(active_tasks_url)
             #  open dbs urls
-            all_dbs_url = urllib2.urlopen(self.couch_dbs).read()
+            all_dbs_url = urllib2.urlopen(self.couch_url+'_all_dbs').read()
             all_dbs = json.loads(all_dbs_url)
 
             # init task and DBs per task presentation
