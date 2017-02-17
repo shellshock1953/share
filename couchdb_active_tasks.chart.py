@@ -77,10 +77,12 @@ class Service(SimpleService):
                 self.data[key] = 0
 
             # open active tasks urls
-            active_tasks_url = urllib2.urlopen(self.couch_url+'_active_task').read()
+            couch_tsk = self.couch_url + '_active_tasks'
+            active_tasks_url = urllib2.urlopen(couch_tsk).read()
             active_tasks = json.loads(active_tasks_url)
             #  open dbs urls
-            all_dbs_url = urllib2.urlopen(self.couch_url+'_all_dbs').read()
+            couch_dbs = self.couch_url + '_all_dbs'
+            all_dbs_url = urllib2.urlopen(couch_dbs).read()
             all_dbs = json.loads(all_dbs_url)
 
             # init task and DBs per task presentation
