@@ -15,19 +15,19 @@ Collect the most useful info, like requests methods, code statuses, I/O, etc.
  couch_url: 'http://0.0.0.0:5984/'
  couch_db: '{{ db_name }}'
 ```
-* **{{ graph_name }}** header name of Netdata graph (common db_name).
+* **{{ graph_name }}** header name of Netdata graph with no spaces(common db_name).
 * **{{ db_name }}** database name for collecting database fragmentation and documents statistics.
 
 ---
 #### couchdb_active_tasks.chart.py
 Show 5 graph: 1st represents count of all running tasks, other -- databases per task.
 **Databases with names starting with '_' are passing.**
-##### couchdb.conf
+##### couchdb_active_tasks.conf
 ```
 {{ graph_name }}:
  couch_url: 'http://0.0.0.0:5984/'
 ```
-* **{{ graph_name }}** header name of Netdata graph (common db_name).
+* **{{ graph_name }}** header name of Netdata graph with no spaces(common db_name).
 
 ---
 ### Installation:
@@ -37,6 +37,8 @@ Show 5 graph: 1st represents count of all running tasks, other -- databases per 
 `cd ~/.netdata_plugins`
 
 `sudo cp *.chart.py /usr/libexec/netdata/python.d/`
+
+Edit .conf files and place values instead of '**{{ value }}**'
 
 `sudo cp *.conf /etc/netdata/python.d/`
 

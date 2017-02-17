@@ -1,5 +1,3 @@
-# import sys
-# sys.path.append('/data/shellshock/install/netdata/python.d/python_modules/')
 from base import SimpleService
 import json
 
@@ -57,8 +55,7 @@ CHARTS = {
 class Service(SimpleService):
     def __init__(self, configuration=None, name=None):
         SimpleService.__init__(self, configuration=configuration, name=name)
-        # self.couch_url = configuration['couch_url']
-        self.couch_url = 'http://127.0.0.1:5984/'
+        self.couch_url = configuration['couch_url']
         self.couch_tsk = self.couch_url + '_active_tasks'
         self.couch_dbs = self.couch_url + '_all_dbs'
         if len(self.couch_url) is 0:
@@ -117,15 +114,6 @@ class Service(SimpleService):
                     if active_task_database == db:
                         self.data[active_task['type'] + '_' + db] += 1
 
-            for key in self.data.keys():
-                if self.data[key] is None:
-                    self.data[key] = 0
-
-
         except (ValueError, AttributeError):
             return None
         return self.data
-
-# s = Service(configuration={'update_every':1,'retries':60,'priority':6000},name=None)
-# d = s._get_data()
-# print d
