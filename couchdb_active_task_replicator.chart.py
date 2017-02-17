@@ -4,7 +4,8 @@
 
 import sys
 
-sys.path.append('/data/shellshock/install/netdata/python.d/python_modules/')
+#sys.path.append('/data/shellshock/install/netdata/python.d/python_modules/')
+#sys.path.append('/usr/libexec/netdata/python.d/python_modules/')
 from base import SimpleService
 import json
 
@@ -30,7 +31,7 @@ CHARTS = {
 class Service(SimpleService):
     def __init__(self, configuration=None, name=None):
         SimpleService.__init__(self, configuration=configuration, name=name)
-        self.couch_tsk = open('active_task_repl.json').read()
+        self.couch_tsk = open('/home/shellshock/share_DEBUG/active_task_repl.json').read()
         # if len(self.couch_stats) == 0 or len(self.couch_db) == 0:
         #     raise Exception('Invalid couch')
         self.order = ORDER
@@ -46,5 +47,5 @@ class Service(SimpleService):
         return self.data
 
 
-s = Service(configuration={'priority': 60000, 'retries': 60, 'update_every': 1}, name=None)
-d = s._get_data()
+#s = Service(configuration={'priority': 60000, 'retries': 60, 'update_every': 1}, name=None)
+#d = s._get_data()
