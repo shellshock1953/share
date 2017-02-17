@@ -116,6 +116,10 @@ class Service(SimpleService):
                     if active_task_database == db:
                         self.data[active_task['type'] + '_' + db] += 1
 
+            for key in self.data.keys():
+                if self.data[key] = None:
+                    self.data[key] = 0
+
 
         except (ValueError, AttributeError):
             return None
