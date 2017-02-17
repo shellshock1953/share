@@ -55,8 +55,8 @@ CHARTS = {
 class Service(SimpleService):
     def __init__(self, configuration=None, name=None):
         SimpleService.__init__(self, configuration=configuration, name=name)
-        self.couch_tsk = configuration['couch_tsk']
-        self.couch_dbs = configuration['couch_dbs']
+        self.couch_tsk = configuration['couch_url'] + '_active_tasks'
+        self.couch_dbs = configuration['couch_url'] + '_all_dbs'
         if len(self.couch_tsk) is 0:
             raise Exception('Invalid couch url')
         self.order = ORDER
@@ -71,13 +71,13 @@ class Service(SimpleService):
 
     def _get_data(self):
         try:
-            tasks_to_monitor = [ 'indexer', 'database_compaction', 'view_compaction', 'replication' ]
+            tasks_to_monitor = ['indexer', 'database_compaction', 'view_compaction', 'replication']
 
             # zero values EVERY time
             for key in self.data.keys():
                 self.data[key] = 0
 
-            #  open active tasks urls
+            # open active tasks urls
             active_tasks_url = urllib2.urlopen(self.couch_tsk).read()
             active_tasks = json.loads(active_tasks_url)
             #  open dbs urls
@@ -89,8 +89,8 @@ class Service(SimpleService):
                 self.data[monitoring_task + '_task'] = 0
                 for db in all_dbs:
                     if db[0] == '_': continue
-                    self.data[monitoring_task+'_'+db] = 0
-                    CHARTS[monitoring_task]['lines'].append([monitoring_task+'_'+db, db, 'absolute', 1, 1])
+                    self.data[monitoring_task + '_' + db] = 0
+                    CHARTS[monitoring_task]['lines'].append([monitoring_task + '_' + db, db, 'absolute', 1, 1])
 
             # calculate running tasks
             for active_task in active_tasks:
@@ -102,14 +102,16 @@ class Service(SimpleService):
             for db in all_dbs:
                 if db[0] == '_': continue
                 for active_task in active_tasks:
-                    try: active_task_database = active_task['database']
+                    try:
+                        active_task_database = active_task['database']
                     except KeyError:
                         if '/' in active_task['target']:
                             active_task_database_str = active_task['target']
                             active_task_database = active_task_database_str.split('/')[3]
-                        else: active_task_database = active_task['target']
+                        else:
+                            active_task_database = active_task['target']
                     if active_task_database == db:
-                        self.data[active_task['type']+'_'+db] += 1
+                        self.data[active_task['type'] + '_' + db] += 1
 
 
         except (ValueError, AttributeError):

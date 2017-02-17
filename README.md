@@ -1,18 +1,46 @@
-###Place all plugins into /usr/libexec/netdata/python.d/
+## CouchDB monitoring plugins
+- **Plugin name:** {{ plugin_name }}.chart.py
+- **Plugin path:** */usr/libexec/netdata/python.d/*
+- **Conf names:** {{ plugin_name }}.conf
+- **Conf path:** */etc/netdata/python.d/*
+
+**Plugin would not run without .conf file.**
+
 ---
-##CouchDB.chart.py
-/etc/netdata/python.d/couch.conf
+#### CouchDB.chart.py
+Collect the most useful info, like requests methods, code statuses, I/O, etc.
+##### couchdb.conf
 ```
-lite-public:
- couch_db: 'http://0.0.0.0:5984/edge_db'
+{{ graph_name }}:
  couch_stats: 'http://0.0.0.0:5984/_stats'
+ couch_db: 'http://0.0.0.0:5984/{{ db_name }}'
 ```
+* **{{ graph_name }}** header name of Netdata graph (common db_name).
+* **{{ db_name }}** database name for collecting database fragmentation and documents statistics.
+
 ---
-##CouchDB_active_tasks.chart.py
-/etc/netdata/python.d/couch_active_tasks.conf
+#### CouchDB_active_tasks.chart.py
+Show 5 graph: 1st represents count of all running tasks, other -- databases per task.
+**Databases with names starting with '_' are passing.**
+##### couchdb.conf
 ```
-lite-public:
- couch_tsk: 'http://0.0.0.0:5984/_active_tasks'
- couch_dbs: [edge_db,public_sandbox,shellshock]
+{{ graph_name }}:
+ couch_url: 'http://0.0.0.0:5984/'
 ```
+* **{{ graph_name }}** header name of Netdata graph (common db_name).
+
+---
+### Installation:
+
+`git clone {{ this_repository }} ~/.netdata_plugins`
+
+`cd ~/.netdata_plugins`
+
+`sudo cp *.chart.py /usr/libexec/netdata/python.d/`
+
+`sudo cp *.conf /etc/netdata/python.d/`
+
+`cd && rm -rf ~/.netdata_plugins`
+
+`sudo systemctl restart netdata`
 
