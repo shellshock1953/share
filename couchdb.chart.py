@@ -138,8 +138,9 @@ delta = {}
 class Service(SimpleService):
     def __init__(self, configuration=None, name=None):
         SimpleService.__init__(self, configuration=configuration, name=name)
-        self.couch_db = configuration['couch_db']
-        self.couch_stats = configuration['couch_stats']
+        self.couch_url = configuration['couch_url']
+        self.couch_stats = self.couch_url + '_stats'
+        self.couch_db = self.couch_url + configuration['couch_db']
         if len(self.couch_stats) == 0 or len(self.couch_db) == 0:
             raise Exception('Invalid couch')
         self.order = ORDER

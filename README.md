@@ -7,19 +7,19 @@
 **Plugin would not run without .conf file.**
 
 ---
-#### CouchDB.chart.py
+#### couchdb.chart.py
 Collect the most useful info, like requests methods, code statuses, I/O, etc.
 ##### couchdb.conf
 ```
 {{ graph_name }}:
- couch_stats: 'http://0.0.0.0:5984/_stats'
- couch_db: 'http://0.0.0.0:5984/{{ db_name }}'
+ couch_url: 'http://0.0.0.0:5984/'
+ couch_db: '{{ db_name }}'
 ```
 * **{{ graph_name }}** header name of Netdata graph (common db_name).
 * **{{ db_name }}** database name for collecting database fragmentation and documents statistics.
 
 ---
-#### CouchDB_active_tasks.chart.py
+#### couchdb_active_tasks.chart.py
 Show 5 graph: 1st represents count of all running tasks, other -- databases per task.
 **Databases with names starting with '_' are passing.**
 ##### couchdb.conf
