@@ -57,7 +57,8 @@ CHARTS = {
 class Service(SimpleService):
     def __init__(self, configuration=None, name=None):
         SimpleService.__init__(self, configuration=configuration, name=name)
-        self.couch_url = configuration['couch_url']
+        # self.couch_url = configuration['couch_url']
+        self.couch_url = 'http://127.0.0.1:5984/'
         self.couch_tsk = self.couch_url + '_active_tasks'
         self.couch_dbs = self.couch_url + '_all_dbs'
         if len(self.couch_url) is 0:
@@ -126,4 +127,5 @@ class Service(SimpleService):
         return self.data
 
 # s = Service(configuration={'update_every':1,'retries':60,'priority':6000},name=None)
-# s._get_data()
+# d = s._get_data()
+# print d
