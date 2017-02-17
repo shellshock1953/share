@@ -58,7 +58,8 @@ class Service(SimpleService):
     def __init__(self, configuration=None, name=None):
         SimpleService.__init__(self, configuration=configuration, name=name)
         self.couch_url = configuration['couch_url']
-        # self.couch_url = 'http://127.0.0.1:5984/'
+        self.couch_tsk = self.couch_url + '_active_tasks'
+        self.couch_dbs = self.couch_url + '_all_dbs'
         if len(self.couch_url) is 0:
             raise Exception('Invalid couch url')
         self.order = ORDER
@@ -80,12 +81,10 @@ class Service(SimpleService):
                 self.data[key] = 0
 
             # open active tasks urls
-            couch_tsk = self.couch_url + '_active_tasks'
-            active_tasks_url = urllib2.urlopen(couch_tsk).read()
+            active_tasks_url = urllib2.urlopen(self.couch_tsk).read()
             active_tasks = json.loads(active_tasks_url)
             #  open dbs urls
-            couch_dbs = self.couch_url + '_all_dbs'
-            all_dbs_url = urllib2.urlopen(couch_dbs).read()
+            all_dbs_url = urllib2.urlopen(self.couch_dbs).read()
             all_dbs = json.loads(all_dbs_url)
 
             # init task and DBs per task presentation
