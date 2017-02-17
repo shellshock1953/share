@@ -117,7 +117,7 @@ class Service(SimpleService):
                         self.data[active_task['type'] + '_' + db] += 1
 
             for key in self.data.keys():
-                if self.data[key] = None:
+                if self.data[key] is None:
                     self.data[key] = 0
 
 
