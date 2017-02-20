@@ -1,3 +1,5 @@
+# import sys
+# sys.path.append('/data/shellshock/install/netdata/python.d/python_modules')
 from base import SimpleService
 import json
 
@@ -10,10 +12,7 @@ priority = 70000
 retries = 60
 update_every = 1
 
-ORDER = [
-    'test',
-    'source'
-]
+ORDER = ['test']
 
 CHARTS = {
     'test': {
@@ -29,19 +28,14 @@ class Service(SimpleService):
     def __init__(self, configuration=None, name=None):
         SimpleService.__init__(self, configuration=configuration, name=name)
         self.active_tasks = open('/home/shellshock/share_DEBUG/active_task_repl.json').read()
-        self.local_db = open('/home/shellshock/share_DEBUG/active_task_repl_localdb.json').read()
         self.order = ORDER
         self.definitions = CHARTS
-        self.data = {
-            'test': 0
-        }
+        self.data = {}
 
     def _get_data(self):
-        self.data['test'] = 0
         try:
             tasks = json.loads(self.active_tasks)
             for task in tasks:
-                self.data['test'] += 1
                 source = task['source']
                 source_seq = task['source_seq']
                 my_seq = task['checkpointed_source_seq']
@@ -62,3 +56,9 @@ class Service(SimpleService):
         except (ValueError, AttributeError):
             return None
         return self.data
+
+
+# s = Service(configuration={'priority':60000,'retries':60,'update_every':1},name=None)
+# d = s._get_data()
+# for chart in CHARTS.keys():
+#     print chart
