@@ -3,7 +3,8 @@
 # - test dymanics CHARTS
 
 import sys
-sys.path.append('/data/shellshock/install/netdata/python.d/python_modules')
+
+sys.path.append('/data/shellshock/install/netdata/python.d/python_modules/')
 from base import SimpleService
 import json
 
@@ -25,19 +26,25 @@ CHARTS = {
     }
 }
 
+
 class Service(SimpleService):
     def __init__(self, configuration=None, name=None):
         SimpleService.__init__(self, configuration=configuration, name=name)
-        self.couch_tsk = open('active_task_repl.json').readlines()
-        if len(self.couch_stats) == 0 or len(self.couch_db) == 0:
-            raise Exception('Invalid couch')
+        self.couch_tsk = open('active_task_repl.json').read()
+        # if len(self.couch_stats) == 0 or len(self.couch_db) == 0:
+        #     raise Exception('Invalid couch')
         self.order = ORDER
         self.definitions = CHARTS
-        self.data = {}
+        self.data = {
+            'source':0
+        }
 
-        def _get_data(self):
-            try:
-                active_tasks = json.loads(self.couch_tsk)
-            except (ValueError, AttributeError):
-                return self.data
-            return self.data
+    def _get_data(self):
+        active_tasks = json.loads(self.couch_tsk)
+        for task in active_tasks:
+            print task
+        return self.data
+
+
+s = Service(configuration={'priority': 60000, 'retries': 60, 'update_every': 1}, name=None)
+d = s._get_data()
