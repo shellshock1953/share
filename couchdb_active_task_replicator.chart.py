@@ -26,8 +26,13 @@ priority = 70000
 retries = 60
 update_every = 1
 
-ORDER = []
-CHARTS = {}
+ORDER = ['test']
+CHARTS = {
+    'test': {
+        'options': [None, 'Test', 'tasks', '', '', 'line'],
+        'lines': ['test', 'test', 'absolute', 1, 1]
+    },
+}
 
 
 class Service(SimpleService):
@@ -38,7 +43,7 @@ class Service(SimpleService):
         self.order = ORDER
         self.definitions = CHARTS
         self.data = {
-            'source':0
+            'test':0
         }
 
     def _get_data(self):
@@ -54,9 +59,9 @@ class Service(SimpleService):
             CHARTS[source] = {
                 'options': [None, chart_name, 'tasks', '', '', 'line'],
                 'lines': [
-                    [source_seq, 'source_seq', 'absolute', 1, 1],
-                    [my_seq, 'my_seq', 'absolute', 1, 1],
-                    [db_seq, 'db_seq', 'absolute', 1, 1],
+                    ['source_seq', 'source_seq', 'absolute', 1, 1],
+                    ['my_seq', 'my_seq', 'absolute', 1, 1],
+                    ['db_seq', 'db_seq', 'absolute', 1, 1],
                 ]
             }
 
