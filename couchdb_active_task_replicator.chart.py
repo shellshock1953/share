@@ -1,5 +1,5 @@
-# import sys
-# sys.path.append('/data/shellshock/install/netdata/python.d/python_modules')
+import sys
+sys.path.append('/data/shellshock/install/netdata/python.d/python_modules')
 from base import SimpleService
 import json
 
@@ -27,8 +27,8 @@ CHARTS = {
 class Service(SimpleService):
     def __init__(self, configuration=None, name=None):
         SimpleService.__init__(self, configuration=configuration, name=name)
-        self.active_tasks = open('/home/shellshock/share_DEBUG/active_task_repl.json').read()
-        # self.active_tasks = open('/data/shellshock/share/active_task_repl.json').read()
+        # self.active_tasks = open('/home/shellshock/share_DEBUG/active_task_repl.json').read()
+        self.active_tasks = open('/data/shellshock/share/active_task_repl.json').read()
         self.order = ORDER
         self.definitions = CHARTS
         self.data = {}
@@ -62,7 +62,6 @@ class Service(SimpleService):
         return self.data
 
 
-# s = Service(configuration={'priority':60000,'retries':60,'update_every':1},name=None)
-# d = s._get_data()
-# print CHARTS
-#
+s = Service(configuration={'priority':60000,'retries':60,'update_every':1},name=None)
+d = s._get_data()
+print s.debug()
