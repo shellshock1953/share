@@ -1,0 +1,13 @@
+{
+    "committed_update_seq": 11880,
+    "compact_running": false,
+    "data_size": 28104381,
+    "db_name": "public_sandbox",
+    "disk_format_version": 6,
+    "disk_size": 38390773,
+    "doc_count": 12100,
+    "doc_del_count": 0,
+    "instance_start_time": "1487361777951646",
+    "purge_seq": 0,
+    "update_seq": 12100
+}
