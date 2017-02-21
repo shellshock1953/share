@@ -54,9 +54,24 @@ class Service(SimpleService):
                     }
                 })
 
+    def create(self):
+        for task in self.tasks:
+            source = task['source']
+            self.chart_name = source
+            status = SimpleService.create(self)
+            return status
+
+    def update(self, interval):
+        for task in self.tasks:
+            source = task['source']
+            self.chart_name = source
+            status = SimpleService.update(self, interval=interval)
+            return status
 
 # s = Service(configuration={'priority': 60000, 'retries': 60, 'update_every': 1}, name=None)
 # s._get_data()
 # s.check()
+# s.create()
+# s.update(1)
 # print s.definitions
 # print s.data
