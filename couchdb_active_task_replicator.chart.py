@@ -22,6 +22,8 @@ class Service(SimpleService):
         self.tasks = json.loads(self.file)
 
     def _get_data(self):
+        for key in self.data.keys():
+            self.data[key] = 0
         try:
             self.tasks = json.loads(self.file)
             for task in self.tasks:
@@ -40,8 +42,10 @@ class Service(SimpleService):
     def check(self):
         try:
             self.chart_creation()
+            return True
         except:
             self.error("err in check()")
+            return False
 
     def chart_creation(self):
         try:
