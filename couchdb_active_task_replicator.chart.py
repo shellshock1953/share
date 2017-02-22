@@ -22,54 +22,70 @@ class Service(SimpleService):
         self.tasks = json.loads(self.file)
 
     def _get_data(self):
-        self.tasks = json.loads(self.file)
-        for task in self.tasks:
-            source = task['source']
-            source_seq = task['source_seq']
-            local_seq = task['source_seq']
+        try:
+            self.tasks = json.loads(self.file)
+            for task in self.tasks:
+                source = task['source']
+                source_seq = task['source_seq']
+                local_seq = task['source_seq']
 
-            self.data[source + '_source_seq'] = source_seq
-            self.data[source + '_local_seq'] = local_seq
-        return self.data
+                self.data[source + '_source_seq'] = source_seq
+                self.data[source + '_local_seq'] = local_seq
+            return self.data
+        except:
+            self.error("err in _get_data")
 
     # if false -- exit
     # used for dynamic chart creation
     def check(self):
-        self.chart_creation()
+        try:
+            self.chart_creation()
+        except:
+            self.error("err in check()")
 
     def chart_creation(self):
-        for task in self.tasks:
-            source = task['source']
-            if source not in self.order:
-                self.order.append(source)
-                source_seq_var = source + '_source_seq'
-                local_seq_var = source + '_local_seq'
+        try:
+            for task in self.tasks:
+                source = task['source']
+                if source not in self.order:
+                    self.order.append(source)
+                    source_seq_var = source + '_source_seq'
+                    local_seq_var = source + '_local_seq'
 
-                self.definitions.update({
-                    source: {
-                        'options': [None, 'Replications', 'seq', '', '', 'line'],
-                        'lines': [
-                            [source_seq_var, 'source_seq', 'absolute', 1, 1],
-                            [local_seq_var, 'local_seq', 'absolute', 1, 1], ]
-                    }
-                })
+                    self.definitions.update({
+                        source: {
+                            'options': [None, 'Replications', 'seq', '', '', 'line'],
+                            'lines': [
+                                [source_seq_var, 'source_seq', 'absolute', 1, 1],
+                                [local_seq_var, 'local_seq', 'absolute', 1, 1], ]
+                        }
+                    })
+        except:
+            self.error("err in chart_creation()")
 
     def create(self):
-        for task in self.tasks:
-            source = task['source']
-            self.chart_name = source
-            status = SimpleService.create(self)
-            return status
+        try:
+            for task in self.tasks:
+                source = task['source']
+                self.chart_name = source
+                status = SimpleService.create(self)
+                return status
+        except:
+            self.error("err in create()")
 
     def update(self, interval):
-        for task in self.tasks:
-            source = task['source']
-            self.chart_name = source
-            status = SimpleService.update(self, interval=interval)
-            return status
+        try:
+            for task in self.tasks:
+                source = task['source']
+                self.chart_name = source
+                status = SimpleService.update(self, interval=interval)
+                return status
+        except:
+            self.error("err in update()")
 
 # s = Service(configuration={'priority': 60000, 'retries': 60, 'update_every': 1}, name=None)
 # s._get_data()
+# import pdb; pdb.set_trace()
 # s.check()
 # s.create()
 # s.update(1)
