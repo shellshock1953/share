@@ -107,25 +107,26 @@ class Service(SimpleService):
             self.error("err in check()")
             return False
 
-    def fix_source_name(self, source):
-        fixed_source_name = ""
-        if '/' in source:
-            fixed_source_name = source.split('/')[3]
-            return fixed_source_name
+    def fix_database_name(self, database_name):
+        fixed_database_name = ""
+        if '/' in database_name:
+            fixed_database_name = database_name.split('/')[3]
+            return fixed_database_name
         else:
-            return source
+            return database_name
 
     def create_replication_charts(self):
         # TODO: chart name be like: source + "_source_replication"
         def create(source):
             # fix name
-            source = self.fix_source_name(source)
+            source = self.fix_database_name(source)
 
             if source not in self.order:
                 # ORDER
                 self.order.append(source)
                 source_seq_var = source + '_source_seq'
                 local_seq_var = source + '_local_seq'
+                update_seq_var = source + '_update_seq'
 
                 # CHARTS
                 self.definitions.update({
@@ -133,7 +134,9 @@ class Service(SimpleService):
                         'options': [None, 'Replications', 'seq', '', '', 'line'],
                         'lines': [
                             [source_seq_var, 'source_seq', 'absolute', 1, 1],
-                            [local_seq_var, 'local_seq', 'absolute', 1, 1], ]
+                            [local_seq_var, 'local_seq', 'absolute', 1, 1],
+                            [update_seq_var, 'update_seq', 'absolute', 1, 1]
+                        ]
                     }
                 })
                 self.create()
@@ -178,7 +181,7 @@ class Service(SimpleService):
                     try:
                         active_task_database = active_task['database']
                     except KeyError:
-                        active_task_database = self.fix_source_name(active_task['target'])
+                        active_task_database = self.fix_database_name(active_task['target'])
 
                     if active_task_database == db:
                         self.data[active_task['type'] + '_' + db] += 1
@@ -186,16 +189,24 @@ class Service(SimpleService):
             # calculate seq for replication task
             for active_task in self.active_tasks:
                 if active_task['type'] == 'replication':
-                    source = self.fix_source_name(active_task['source'])
+                    source = self.fix_database_name(active_task['source'])
+                    target = self.fix_database_name(active_task['target'])
 
                     # TODO: chart name be like: source + "_source_replication"
                     if source not in self.order:
                         self.new_source_replications.append(source)
 
+                    # get update_seq from current replication target db
+                    current_db_url = urllib2.urlopen(self.couch_url + target).read()
+                    current_db = json.loads(current_db_url)
+                    update_seq = current_db['update_seq']
+
                     source_seq = active_task['source_seq']
-                    local_seq = active_task['source_seq']
+                    # TODO: revisions_checked IS correct???
+                    local_seq = active_task['revisions_checked']
                     self.data[source + '_source_seq'] = source_seq
                     self.data[source + '_local_seq'] = local_seq
+                    self.data[source + '_update_seq'] = update_seq
 
 
         except (ValueError, AttributeError):
