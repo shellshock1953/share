@@ -51,16 +51,16 @@ class Service(SimpleService):
 
     # if false -- exit
     # used for dynamic chart creation
-    # because check() runs before run()
+    # because check() runs once before run()
     def check(self):
         try:
-            status = self.chart_creation()
+            status = self.create_replication_charts()
             return status
         except:
             self.error("err in check()")
             return False
 
-    def chart_creation(self):
+    def create_replication_charts(self):
         def create(source):
             if source not in self.order:
                 # ORDER
@@ -104,7 +104,7 @@ class Service(SimpleService):
         updated = False
         # do we have new charts?
         if self.new_charts:
-            self.chart_creation()
+            self.create_replication_charts()
 
         for chart in self.order:
             if self.begin(self.chart_name + "." + chart, interval):
