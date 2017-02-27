@@ -29,7 +29,7 @@ ORDER = [
 
 CHARTS = {
     'database_documents_delta': {
-        'options': [None, 'Documents', 'documents', '', '', 'line'],
+        'options': [None, 'Documents', 'documents', 'Documents', '', 'line'],
         'lines': [
             ['docs_delta', 'docs', 'absolute', 1, 1],
             ['docs_deleted_delta', 'docs_deleted', 'absolute', 1, 1]
