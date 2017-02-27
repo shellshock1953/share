@@ -58,13 +58,13 @@ class Service(SimpleService):
     def __init__(self, configuration=None, name=None):
         SimpleService.__init__(self, configuration=configuration, name=name)
         self.tasks_to_monitor = ['indexer', 'database_compaction', 'view_compaction', 'replication']
-        self.couch_url = configuration['couch_url']
-        # self.couch_url = 'http://127.0.0.1:5984/'
+        # self.couch_url = configuration['couch_url']
+        self.couch_url = 'http://127.0.0.1:5984/'
         self.couch_active_task_url = self.couch_url + '_active_tasks'
         if len(self.couch_url) is 0: raise Exception('Invalid couch url')
 
-        self.couch_db_name = configuration['db']
-        # self.couch_db_name = 'public_sandbox'
+        # self.couch_db_name = configuration['db']
+        self.couch_db_name = 'public_sandbox'
         self.couch_db_url = self.couch_url + self.couch_db_name
 
         self.refresh()
@@ -142,17 +142,14 @@ class Service(SimpleService):
                     if source not in self.order:
                         self.new_source_replications.append(source)
 
-                    # get update_seq from current replication target db
-                    current_db_url = urllib2.urlopen(self.couch_url + target).read()
-                    current_db = json.loads(current_db_url)
-                    update_seq = current_db['update_seq']
+                    db_seq = self.database_stats['committed_update_seq']
 
                     source_seq = active_task['source_seq']
-                    # TODO: revisions_checked IS correct???
-                    local_seq = active_task['revisions_checked']
+                    # TODO: IS checkpoined_source correct value???
+                    local_seq = active_task['checkpointed_source_seq']
                     self.data[source + '_source_seq'] = source_seq
                     self.data[source + '_local_seq'] = local_seq
-                    self.data[source + '_update_seq'] = update_seq
+                    self.data[source + '_db_seq'] = db_seq
 
         except (ValueError, AttributeError):
             return None
