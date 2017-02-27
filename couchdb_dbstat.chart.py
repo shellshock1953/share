@@ -29,14 +29,14 @@ ORDER = [
 
 CHARTS = {
     'database_documents_delta': {
-        'options': [None, 'Documents', 'documents', 'Documents', '', 'line'],
+        'options': [None, 'Documents', 'documents', 'Documents delta', '', 'line'],
         'lines': [
             ['docs_delta', 'docs', 'absolute', 1, 1],
             ['docs_deleted_delta', 'docs_deleted', 'absolute', 1, 1]
         ]
     },
     'database_documents': {
-        'options': [None, 'Documents', 'documents', '', '', 'line'],
+        'options': [None, 'Documents', 'documents', 'Documents', '', 'line'],
         'lines': [
             ['docs', 'docs', 'absolute', 1, 1],
             ['docs_deleted', 'docs_deleted', 'absolute', 1, 1]
@@ -194,7 +194,7 @@ class Service(SimpleService):
                 # CHARTS
                 self.definitions.update({
                     source: {
-                        'options': [None, 'Replications', 'seq', '', '', 'line'],
+                        'options': [None, 'Replications', 'seq', 'Replication seq', '', 'line'],
                         'lines': [
                             [source_seq_var, 'source_seq', 'absolute', 1, 1],
                             [local_seq_var, 'local_seq', 'absolute', 1, 1],
