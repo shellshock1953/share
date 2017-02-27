@@ -72,9 +72,6 @@ class Service(SimpleService):
         self.couch_active_task_url = self.couch_url + '_active_tasks'
         self.couch_all_dbs_url = self.couch_url + '_all_dbs'
 
-        self.active_tasks = 0
-        self.all_dbs = 0
-
         self.refresh()
 
         self.new_source_replications = []
@@ -154,5 +151,5 @@ class Service(SimpleService):
         return self.data
 
 
-s = Service(configuration={'priority': 60000, 'retries': 60, 'update_every': 1}, name=None)
-print s._get_data()
+# s = Service(configuration={'priority': 60000, 'retries': 60, 'update_every': 1}, name=None)
+# print s._get_data()

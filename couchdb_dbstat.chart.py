@@ -29,21 +29,21 @@ ORDER = [
 
 CHARTS = {
     'database_documents_delta': {
-        'options': [None, 'CouchDB documents', 'documents', '', '', 'line'],
+        'options': [None, 'Documents', 'documents', '', '', 'line'],
         'lines': [
             ['docs_delta', 'docs', 'absolute', 1, 1],
             ['docs_deleted_delta', 'docs_deleted', 'absolute', 1, 1]
         ]
     },
     'database_documents': {
-        'options': [None, 'CouchDB documents', 'documents', '', '', 'line'],
+        'options': [None, 'Documents', 'documents', '', '', 'line'],
         'lines': [
             ['docs', 'docs', 'absolute', 1, 1],
             ['docs_deleted', 'docs_deleted', 'absolute', 1, 1]
         ]
     },
     'database_fragmentation': {
-        'options': [None, 'Database fragmentation', 'Megabytes', '', '', 'line'],
+        'options': [None, 'Database fragmentation', 'Megabytes', 'Database fragmentation', '', 'line'],
         'lines': [
             ['disk_size_overhead', 'disk size overhead', 'absolute', 1, 1],
             ['data_size', 'data size', 'absolute', 1, 1]
@@ -58,14 +58,16 @@ class Service(SimpleService):
     def __init__(self, configuration=None, name=None):
         SimpleService.__init__(self, configuration=configuration, name=name)
         self.tasks_to_monitor = ['indexer', 'database_compaction', 'view_compaction', 'replication']
-        # self.couch_url = configuration['couch_url']
-        self.couch_url = 'http://127.0.0.1:5984/'
+        self.couch_url = configuration['couch_url']
+        # self.couch_url = 'http://127.0.0.1:5984/'
         self.couch_active_task_url = self.couch_url + '_active_tasks'
         if len(self.couch_url) is 0: raise Exception('Invalid couch url')
 
-        # self.couch_db_name = configuration['db_name']
-        self.couch_db_name = 'public_sandbox'
+        self.couch_db_name = configuration['db']
+        # self.couch_db_name = 'public_sandbox'
         self.couch_db_url = self.couch_url + self.couch_db_name
+
+        self.refresh()
 
         self.new_source_replications = []
         self.order = ORDER
@@ -217,7 +219,7 @@ class Service(SimpleService):
 
             return True
         except:
-            self.error("err in chart_creation()")
+            self.error("err in chart creation")
             return False
 
     # modified update() to check for a new replication tasks
