@@ -215,8 +215,7 @@ class Service(SimpleService):
                         'options': [None, 'Replications', 'seq', 'Replication seq', '', 'line'],
                         'lines': [
                             [source_seq_var, 'source_seq', 'absolute', 1, 1],
-                            [local_seq_var, 'local_seq', 'absolute', 1, 1],
-                            [db_seq_var, 'update_seq', 'absolute', 1, 1]
+                            [local_seq_var, 'local_seq', 'absolute', 1, 1]
                         ]
                     }
                 })
