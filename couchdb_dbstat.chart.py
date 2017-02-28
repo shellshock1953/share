@@ -12,6 +12,8 @@
 # import sys
 # sys.path.append('/data/shellshock/install/netdata/python.d/python_modules')
 
+# TODO: fix error calc_delta() when specify few databases.
+
 from base import SimpleService
 import json
 
@@ -154,7 +156,6 @@ class Service(SimpleService):
             self.data['db_seq'] = self.database_stats['committed_update_seq']
             calc_delta('db_seq')
 
-            # TODO: delta seq in general st
             """ Get db stats from /_active_task """
             if self.active_tasks:
                 for active_task in self.active_tasks:
@@ -202,7 +203,6 @@ class Service(SimpleService):
 
     # create dynamic charts and order
     def create_replication_charts(self):
-        # TODO: chart name be like: source + "_source_replication"
         def create(source):
             # fix name
             source = self.fix_database_name(source)
