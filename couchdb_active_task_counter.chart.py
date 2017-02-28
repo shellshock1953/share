@@ -4,6 +4,7 @@
 #
 # more info: github.com/shellshock1953/share
 
+
 # import sys
 # sys.path.append('/data/shellshock/install/netdata/python.d/python_modules')
 
@@ -15,9 +16,9 @@ try:
 except ImportError:
     import urllib2
 
-priority = 70000
+priority = 70010
 retries = 60
-update_every = 1
+update_every = 10
 
 ORDER = [
     'active_tasks',
@@ -84,6 +85,7 @@ class Service(SimpleService):
             'replication_task': 0,
         }
 
+    # get fresh data
     def refresh(self):
         # open active tasks urls
         active_tasks_url = urllib2.urlopen(self.couch_active_task_url).read()
@@ -92,8 +94,8 @@ class Service(SimpleService):
         all_dbs_url = urllib2.urlopen(self.couch_all_dbs_url).read()
         self.all_dbs = json.loads(all_dbs_url)
 
+    # from 'http://ip:port/db' cut 'db' only
     def fix_database_name(self, database_name):
-        fixed_database_name = ""
         if '/' in database_name:
             fixed_database_name = database_name.split('/')[3]
             return fixed_database_name
@@ -105,6 +107,7 @@ class Service(SimpleService):
         # no need to refresh() -- first start
         try:
             # init task and DBs per task presentation
+            # creating dynamic charts
             for monitoring_task in self.tasks_to_monitor:
                 self.data[monitoring_task + '_task'] = 0
                 for db in self.all_dbs:
@@ -120,7 +123,7 @@ class Service(SimpleService):
 
     def _get_data(self):
         try:
-            # get new data
+            # get fresh data
             self.refresh()
 
             # zero values EVERY time
@@ -144,7 +147,6 @@ class Service(SimpleService):
 
                     if active_task_database == db:
                         self.data[active_task['type'] + '_' + db] += 1
-
 
         except (ValueError, AttributeError):
             return None

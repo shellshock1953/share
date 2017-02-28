@@ -4,8 +4,10 @@
 #
 # more info: github.com/shellshock1953/share
 
+
 # import sys
 # sys.path.append('/data/shellshock/install/netdata/python.d/python_modules')
+
 from base import SimpleService
 
 import json
@@ -19,8 +21,8 @@ priority = 70000
 retries = 60
 update_every = 1
 
+# static order
 ORDER = [
-    # 'active_tasks',
     'authenthentication_cache',
     'continuous_changes_listeners',
     'database_io_statistics_delta',
@@ -32,6 +34,7 @@ ORDER = [
     'open_files'
 ]
 
+# static charts
 CHARTS = {
     'authenthentication_cache': {
         'options': [None, 'Authentification cache', 'ratio', 'Authentification cache', '', 'line'],
@@ -112,7 +115,8 @@ CHARTS = {
     }
 }
 
-# DELTA
+# DELTA contains previous metrics, to calculate difference 'now - previous'
+# used to avoid non-integer metric presentation in Netdata dashboard
 DELTA = {}
 
 
@@ -164,17 +168,19 @@ class Service(SimpleService):
             'dbs': 0
         }
 
+    # get fresh data
     def refresh(self):
         # open /_stats url
         couch_stats_open = urllib2.urlopen(self.couch_stats_url).read()
         self.couch_stats = json.loads(couch_stats_open)
 
     def _get_data(self):
-        # get updated data
+        # zero values
         for key in self.data.keys():
             self.data[key] = 0
 
         # calc 'new - previous' values
+        # result stored in DELTA{}
         def calc_delta(*args):
             for metric in args:
                 if self.data[metric] is None: self.data[metric] = 0

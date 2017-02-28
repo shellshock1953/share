@@ -1,5 +1,8 @@
 # -*- coding: utf-8 -*-
 # Description: CouchDB DB statistics/replication taks Netdata plugin
+# used to monitoring specific database and replication task of this database (if any)
+# main feather: dynamic chart and order creation when new replication task available (only need if to refresh dashboard)
+#
 # specify 'http://IP:PORT/' in conf.file
 # specify 'db_name' in conf.file
 #
@@ -17,16 +20,18 @@ try:
 except ImportError:
     import urllib2
 
-priority = 70000
+priority = 70030
 retries = 60
-update_every = 1
+update_every = 5
 
+# static part of dynamic order
 ORDER = [
     'database_documents_delta',
     'database_documents',
     'database_fragmentation'
 ]
 
+# static part of dynamic charts
 CHARTS = {
     'database_documents_delta': {
         'options': [None, 'Documents', 'documents', 'Documents delta', '', 'line'],
@@ -51,6 +56,8 @@ CHARTS = {
     }
 }
 
+# DELTA contains previous metrics, to calculate difference 'now - previous'
+# used to avoid non-integer metric presentation in Netdata dashboard
 DELTA = {}
 
 
@@ -81,6 +88,7 @@ class Service(SimpleService):
             'docs_deleted_delta': 0
         }
 
+    # get fresh data
     def refresh(self):
         # open active tasks urls
         active_tasks_url = urllib2.urlopen(self.couch_active_task_url).read()
@@ -95,6 +103,8 @@ class Service(SimpleService):
 
     def _get_data(self):
 
+        # calc 'new - previous' values
+        # result stored in DELTA{}
         def calc_delta(*args):
             for metric in args:
                 if self.data[metric] is None: self.data[metric] = 0
@@ -156,8 +166,7 @@ class Service(SimpleService):
         return self.data
 
     # if false -- exit
-    # used for dynamic chart creation
-    # because check() runs once before run()
+    # used for dynamic chart creation because check() runs only once before run()
     def check(self):
         # no need to refresh() -- first start
         try:
@@ -168,6 +177,7 @@ class Service(SimpleService):
             self.error("err in check()")
             return False
 
+    # from 'http://ip:port/db' cut 'db' only
     def fix_database_name(self, database_name):
         if '/' in database_name:
             fixed_database_name = database_name.split('/')[3]
@@ -175,6 +185,7 @@ class Service(SimpleService):
         else:
             return database_name
 
+    # create dynamic charts and order
     def create_replication_charts(self):
         # TODO: chart name be like: source + "_source_replication"
         def create(source):
@@ -202,8 +213,7 @@ class Service(SimpleService):
                 self.create()
 
         try:
-            # self.new_replication contains newi source replications only
-            # with fixed names (no http://)
+            # self.new_replication must contains new source replications only
             for source in self.new_source_replications:
                 create(source)
                 self.new_charts.remove(source)
@@ -227,6 +237,7 @@ class Service(SimpleService):
             return False
 
         updated = False
+
         # do we have new replication charts to be created?
         if self.new_source_replications:
             self.create_replication_charts()
