@@ -28,7 +28,8 @@ update_every = 5
 ORDER = [
     'database_documents_delta',
     'database_documents',
-    'database_fragmentation'
+    'database_fragmentation',
+    'database_seq'
 ]
 
 # static part of dynamic charts
