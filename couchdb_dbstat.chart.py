@@ -124,6 +124,7 @@ class Service(SimpleService):
                     DELTA[metric] = previous
                 else:
                     DELTA[metric] = self.data[metric]
+
         try:
             # get new data
             self.refresh()
@@ -163,15 +164,16 @@ class Service(SimpleService):
                     if source not in self.order:
                         self.new_source_replications.append(source)
 
-
                     source_seq = active_task['source_seq']
-                    # TODO: IS checkpoined_source correct value???
                     local_seq = active_task['checkpointed_source_seq']
-                    self.data[source + '_source_seq'] = source_seq
-                    self.data[source + '_local_seq'] = local_seq
-                    calc_delta([source + '_source_seq',source + '_local_seq'])
+                    source_seq_name = source + '_source_seq'
+                    local_seq_name = source + '_local_seq'
+                    self.data[source_seq_name] = source_seq
+                    self.data[local_seq_name] = local_seq
+                    calc_delta(source_seq_name, local_seq_name)
 
         except (ValueError, AttributeError):
+            self.error('error in _get_data()')
             return None
         return self.data
 
@@ -266,6 +268,7 @@ class Service(SimpleService):
             self.error("no charts to update")
 
         return updated
+
 
 # s = Service(configuration={'priority': 60000, 'retries': 60, 'update_every': 1}, name=None)
 # s.check()
