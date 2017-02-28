@@ -72,13 +72,13 @@ class Service(SimpleService):
     def __init__(self, configuration=None, name=None):
         SimpleService.__init__(self, configuration=configuration, name=name)
         self.tasks_to_monitor = ['indexer', 'database_compaction', 'view_compaction', 'replication']
-        # self.couch_url = configuration['couch_url']
-        self.couch_url = 'http://127.0.0.1:5984/'
+        self.couch_url = configuration['couch_url']
+        # self.couch_url = 'http://127.0.0.1:5984/'
         self.couch_active_task_url = self.couch_url + '_active_tasks'
         if len(self.couch_url) is 0: raise Exception('Invalid couch url')
 
-        # self.couch_db_name = configuration['db']
-        self.couch_db_name = 'public_sandbox'
+        self.couch_db_name = configuration['db']
+        # self.couch_db_name = 'public_sandbox'
         self.couch_db_url = self.couch_url + self.couch_db_name
 
         self.refresh()
