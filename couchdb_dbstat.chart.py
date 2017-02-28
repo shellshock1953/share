@@ -53,6 +53,12 @@ CHARTS = {
             ['disk_size_overhead', 'disk size overhead', 'absolute', 1, 1],
             ['data_size', 'data size', 'absolute', 1, 1]
         ]
+    },
+    'database_seq': {
+        'options': [None, 'Database seq', 'seq', 'Database seq', '', 'line'],
+        'lines': [
+            ['db_seq', 'db seq', 'absolute', 1, 1]
+        ]
     }
 }
 
@@ -142,6 +148,11 @@ class Service(SimpleService):
             self.data['docs_deleted_delta'] = self.database_stats['doc_del_count']
             calc_delta('docs_delta', 'docs_deleted_delta')
 
+            # update_seq
+            self.data['db_seq'] = self.database_stats['committed_update_seq']
+            calc_delta('db_seq')
+
+            # TODO: delta seq in general st
             """ Get db stats from /_active_task """
             for active_task in self.active_tasks:
                 if active_task['type'] == 'replication' and self.couch_db_name in active_task['source']:
@@ -152,14 +163,13 @@ class Service(SimpleService):
                     if source not in self.order:
                         self.new_source_replications.append(source)
 
-                    db_seq = self.database_stats['committed_update_seq']
 
                     source_seq = active_task['source_seq']
                     # TODO: IS checkpoined_source correct value???
                     local_seq = active_task['checkpointed_source_seq']
                     self.data[source + '_source_seq'] = source_seq
                     self.data[source + '_local_seq'] = local_seq
-                    self.data[source + '_db_seq'] = db_seq
+                    calc_delta([source + '_source_seq',source + '_local_seq'])
 
         except (ValueError, AttributeError):
             return None
@@ -198,7 +208,6 @@ class Service(SimpleService):
                 self.order.append(source)
                 source_seq_var = source + '_source_seq'
                 local_seq_var = source + '_local_seq'
-                db_seq_var = source + '_db_seq'
 
                 # CHARTS
                 self.definitions.update({
