@@ -8,11 +8,6 @@
 #
 # more info: github.com/shellshock1953/share
 
-# import sys
-# sys.path.append('/data/shellshock/install/netdata/python.d/python_modules/')
-
-# TODO: fix error calc_delta() when specify few databases.
-
 from base import SimpleService
 import json
 
@@ -32,7 +27,6 @@ ORDER = [
     'database_fragmentation',
     'database_seq'
 ]
-
 
 # DELTA contains previous metrics, to calculate difference 'now - previous'
 # used to avoid non-integer metric presentation in Netdata dashboard
@@ -272,8 +266,3 @@ class Service(SimpleService):
             self.error("no charts to update")
 
         return updated
-
-
-# s = Service(configuration={'update_every':update_every,'retries':retries,'priority':priority},name=None)
-# s.check()
-# s.run()
