@@ -7,27 +7,40 @@
 **Plugin would not run without .conf file.**
 
 ---
-#### couchdb.chart.py
-Collect the most useful info, like requests methods, code statuses, I/O, etc.
-##### couchdb.conf
+#### couchdb_stats.chart.py
+Collect the most useful server info, like requests methods, code statuses, I/O, etc.
+##### couchdb_stats.conf
 ```
 {{ graph_name }}:
- couch_url: 'http://0.0.0.0:5984/'
- couch_db: '{{ db_name }}'
+ couch_url: 'http://{{ ip:port }}/'
 ```
 * **{{ graph_name }}** header name of Netdata graph with no spaces(common db_name).
-* **{{ db_name }}** database name for collecting database fragmentation and documents statistics.
+* **{{ ip:port }}** CouchDB IP and port (0.0.0.0:5984)
 
 ---
-#### couchdb_active_tasks.chart.py
+#### couchdb_active_task_counter.chart.py
 Show 5 graph: 1st represents count of all running tasks, other -- databases per task.
 **Databases with names starting with '_' are passing.**
-##### couchdb_active_tasks.conf
+##### couchdb_active_task_counter.conf
 ```
 {{ graph_name }}:
- couch_url: 'http://0.0.0.0:5984/'
+ couch_url: 'http://{{ ip:port }}/'
 ```
 * **{{ graph_name }}** header name of Netdata graph with no spaces(common db_name).
+* **{{ ip:port }}** CouchDB IP and port (0.0.0.0:5984)
+
+---
+#### couchdb_dbstat.chart.py
+Show database info, and (if any) replication info, where selected base is a target (can be changed in near future)
+##### couchdb_active_task_counter.conf
+```
+{{ graph_name }}:
+ couch_url: 'http://{{ ip:port }}/'
+ db: '{{ database_name }}'
+```
+* **{{ graph_name }}** header name of Netdata graph with no spaces(common db_name).
+* **{{ ip:port }}** CouchDB IP and port (0.0.0.0:5984)
+* **{{ database_name }}** database name used to be monitored
 
 ---
 ### Installation:

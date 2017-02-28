@@ -159,7 +159,7 @@ class Service(SimpleService):
             """ Get db stats from /_active_task """
             if self.active_tasks:
                 for active_task in self.active_tasks:
-                    if active_task['type'] == 'replication' and self.couch_db_name in active_task['source']:
+                    if active_task['type'] == 'replication' and self.couch_db_name in active_task['target']:
                         source = self.fix_database_name(active_task['source'])
                         target = self.fix_database_name(active_task['target'])
 
