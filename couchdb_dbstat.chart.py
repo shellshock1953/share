@@ -8,6 +8,8 @@
 #
 # more info: github.com/shellshock1953/share
 
+# import sys
+# sys.path.append('/data/shellshock/install/netdata/python.d/python_modules/')
 
 # TODO: fix error calc_delta() when specify few databases.
 
@@ -70,13 +72,13 @@ class Service(SimpleService):
     def __init__(self, configuration=None, name=None):
         SimpleService.__init__(self, configuration=configuration, name=name)
         self.tasks_to_monitor = ['indexer', 'database_compaction', 'view_compaction', 'replication']
-        self.couch_url = configuration['couch_url']
-        # self.couch_url = 'http://127.0.0.1:5984/'
+        # self.couch_url = configuration['couch_url']
+        self.couch_url = 'http://127.0.0.1:5984/'
         self.couch_active_task_url = self.couch_url + '_active_tasks'
         if len(self.couch_url) is 0: raise Exception('Invalid couch url')
 
-        self.couch_db_name = configuration['db']
-        # self.couch_db_name = 'public_sandbox'
+        # self.couch_db_name = configuration['db']
+        self.couch_db_name = 'public_sandbox'
         self.couch_db_url = self.couch_url + self.couch_db_name
 
         self.refresh()
@@ -180,7 +182,9 @@ class Service(SimpleService):
     def check(self):
         # no need to refresh() -- first start
         try:
-            self.definitions['database_seq']['lines'] = [self.couch_db_name + '_db_seq', 'db seq', 'absolute', 1, 1]
+            self.definitions['database_seq']['lines'].append(
+                [self.couch_db_name + '_db_seq', 'db seq', 'absolute', 1, 1]
+            )
             # init replication charts
             status = self.create_replication_charts()
             return status
@@ -266,3 +270,8 @@ class Service(SimpleService):
             self.error("no charts to update")
 
         return updated
+
+
+# s = Service(configuration={'update_every':update_every,'retries':retries,'priority':priority},name=None)
+# s.check()
+# s.run()
