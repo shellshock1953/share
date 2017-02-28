@@ -1,3 +1,13 @@
+# -*- coding: utf-8 -*-
+# Description: CouchDB ACTIVE TASKS counter Netdata plugin
+# specify 'http://IP:PORT/' in conf.file
+#
+# more info: github.com/shellshock1953/share
+
+
+# import sys
+# sys.path.append('/data/shellshock/install/netdata/python.d/python_modules')
+
 from base import SimpleService
 import json
 
@@ -6,9 +16,9 @@ try:
 except ImportError:
     import urllib2
 
-priority = 70000
+priority = 70010
 retries = 60
-update_every = 1
+update_every = 10
 
 ORDER = [
     'active_tasks',
@@ -55,11 +65,18 @@ CHARTS = {
 class Service(SimpleService):
     def __init__(self, configuration=None, name=None):
         SimpleService.__init__(self, configuration=configuration, name=name)
+
+        self.tasks_to_monitor = ['indexer', 'database_compaction', 'view_compaction', 'replication']
         self.couch_url = configuration['couch_url']
-        self.couch_tsk = self.couch_url + '_active_tasks'
-        self.couch_dbs = self.couch_url + '_all_dbs'
-        if len(self.couch_url) is 0:
-            raise Exception('Invalid couch url')
+        # self.couch_url = 'http://127.0.0.1:5984/'
+        if len(self.couch_url) is 0: raise Exception('Invalid couch url')
+
+        self.couch_active_task_url = self.couch_url + '_active_tasks'
+        self.couch_all_dbs_url = self.couch_url + '_all_dbs'
+
+        self.refresh()
+
+        self.new_source_replications = []
         self.order = ORDER
         self.definitions = CHARTS
         self.data = {
@@ -67,53 +84,76 @@ class Service(SimpleService):
             'database_compaction_task': 0,
             'view_compaction_task': 0,
             'replication_task': 0,
-
         }
+
+    # get fresh data
+    def refresh(self):
+        # open active tasks urls
+        active_tasks_url = urllib2.urlopen(self.couch_active_task_url).read()
+        self.active_tasks = json.loads(active_tasks_url)
+        #  open dbs urls
+        all_dbs_url = urllib2.urlopen(self.couch_all_dbs_url).read()
+        self.all_dbs = json.loads(all_dbs_url)
+
+    # from 'http://ip:port/db' cut 'db' only
+    def fix_database_name(self, database_name):
+        if '/' in database_name:
+            fixed_database_name = database_name.split('/')[3]
+            return fixed_database_name
+        else:
+            return database_name
+
+    # check() calls once -- before run()
+    def check(self):
+        # no need to refresh() -- first start
+        try:
+            # init task and DBs per task presentation
+            # creating dynamic charts
+            for monitoring_task in self.tasks_to_monitor:
+                self.data[monitoring_task + '_task'] = 0
+                for db in self.all_dbs:
+                    if db[0] == '_': continue
+                    self.data[monitoring_task + '_' + db] = 0
+                    CHARTS[monitoring_task]['lines'].append(
+                        [monitoring_task + '_' + db, db, 'absolute', 1, 1])
+
+            return True
+        except:
+            self.error("err in check()")
+            return False
 
     def _get_data(self):
         try:
-            tasks_to_monitor = ['indexer', 'database_compaction', 'view_compaction', 'replication']
+            # get fresh data
+            self.refresh()
 
             # zero values EVERY time
             for key in self.data.keys():
                 self.data[key] = 0
 
-            # open active tasks urls
-            active_tasks_url = urllib2.urlopen(self.couch_tsk).read()
-            active_tasks = json.loads(active_tasks_url)
-            #  open dbs urls
-            all_dbs_url = urllib2.urlopen(self.couch_dbs).read()
-            all_dbs = json.loads(all_dbs_url)
-
-            # init task and DBs per task presentation
-            for monitoring_task in tasks_to_monitor:
-                self.data[monitoring_task + '_task'] = 0
-                for db in all_dbs:
-                    if db[0] == '_': continue
-                    self.data[monitoring_task + '_' + db] = 0
-                    CHARTS[monitoring_task]['lines'].append([monitoring_task + '_' + db, db, 'absolute', 1, 1])
-
             # calculate running tasks
-            for active_task in active_tasks:
-                for monitoring_task in tasks_to_monitor:
+            for active_task in self.active_tasks:
+                for monitoring_task in self.tasks_to_monitor:
                     if monitoring_task == active_task['type']:
                         self.data[monitoring_task + '_task'] += 1
 
             # calculate dbs per task
-            for db in all_dbs:
+            for db in self.all_dbs:
                 if db[0] == '_': continue
-                for active_task in active_tasks:
+                for active_task in self.active_tasks:
                     try:
                         active_task_database = active_task['database']
                     except KeyError:
-                        if '/' in active_task['target']:
-                            active_task_database_str = active_task['target']
-                            active_task_database = active_task_database_str.split('/')[3]
-                        else:
-                            active_task_database = active_task['target']
+                        active_task_database = self.fix_database_name(active_task['target'])
+
                     if active_task_database == db:
                         self.data[active_task['type'] + '_' + db] += 1
 
         except (ValueError, AttributeError):
             return None
         return self.data
+
+
+# s = Service(configuration={'priority': 60000, 'retries': 60, 'update_every': 1}, name=None)
+# s.run()
+# print s._get_data()
