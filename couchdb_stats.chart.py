@@ -4,10 +4,6 @@
 #
 # more info: github.com/shellshock1953/share
 
-
-# import sys
-# sys.path.append('/data/shellshock/install/netdata/python.d/python_modules')
-
 from base import SimpleService
 
 import json
@@ -269,6 +265,3 @@ class Service(SimpleService):
         except (ValueError, AttributeError):
             return self.data
         return self.data
-
-# s = Service(configuration={'priority':60000,'retries':60,'update_every':1},name=None)
-# d = s._get_data()
