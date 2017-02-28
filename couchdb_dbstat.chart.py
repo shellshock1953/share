@@ -180,8 +180,9 @@ class Service(SimpleService):
     # from 'http://ip:port/db' cut 'db' only
     def fix_database_name(self, database_name):
         if '/' in database_name:
-            fixed_database_name = database_name.split('/')[3]
-            return fixed_database_name
+            server_name, db_name = database_name.split('/')[2:4]
+            server_name = server_name.split(':')[0]
+            return server_name + '.' + db_name
         else:
             return database_name
 
@@ -259,5 +260,6 @@ class Service(SimpleService):
         return updated
 
 # s = Service(configuration={'priority': 60000, 'retries': 60, 'update_every': 1}, name=None)
-# d = s._get_data()
-# print d
+# s.check()
+# s._get_data()
+# print s.order
