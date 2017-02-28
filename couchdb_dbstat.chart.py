@@ -54,11 +54,10 @@ CHARTS = {
             ['data_size', 'data size', 'absolute', 1, 1]
         ]
     },
+    # dynamic creation in check() because of few databases
     'database_seq': {
         'options': [None, 'Database seq', 'seq', 'Database seq', '', 'line'],
-        'lines': [
-            ['db_seq', 'db seq', 'absolute', 1, 1]
-        ]
+        'lines': []
     }
 }
 
@@ -92,7 +91,6 @@ class Service(SimpleService):
             'docs_deleted': 0,
             'docs_delta': 0,
             'docs_deleted_delta': 0,
-            'db_seq': 0
         }
 
     # get fresh data
@@ -182,6 +180,7 @@ class Service(SimpleService):
     def check(self):
         # no need to refresh() -- first start
         try:
+            self.definitions['database_seq']['lines'] = [self.couch_db_name + '_db_seq', 'db seq', 'absolute', 1, 1]
             # init replication charts
             status = self.create_replication_charts()
             return status
