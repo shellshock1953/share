@@ -38,7 +38,7 @@ Show database info, and (if any) replication info, where selected base is a targ
  couch_url: 'http://{{ ip:port }}/'
  db: '{{ database_name }}'
 
- {{ second_db_name }}:
+{{ second_db_name }}:
  couch_url: 'http://{{ ip:port }}/'
  db: '{{ database_name }}'
 ```
