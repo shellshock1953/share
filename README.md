@@ -31,14 +31,19 @@ Show 5 graph: 1st represents count of all running tasks, other -- databases per 
 
 ---
 #### couchdb_dbstat.chart.py
-Show database info, and (if any) replication info, where selected base is a target (can be changed in near future)
-##### couchdb_active_task_counter.conf
+Show database info, and (if any) replication info, where selected base is a target (can be changed in near future). You can specify as many dbs you need (check conf)
+##### couchdb_dbstat.conf
 ```
-{{ graph_name }}:
+{{ first_db_name }}:
+ couch_url: 'http://{{ ip:port }}/'
+ db: '{{ database_name }}'
+
+ {{ second_db_name }}:
  couch_url: 'http://{{ ip:port }}/'
  db: '{{ database_name }}'
 ```
-* **{{ graph_name }}** header name of Netdata graph with no spaces(common db_name).
+* **{{ first_db_name }}** first db to be monitored
+* **{{ second_db_name }}** second db to be monitored
 * **{{ ip:port }}** CouchDB IP and port (0.0.0.0:5984)
 * **{{ database_name }}** database name used to be monitored
 
