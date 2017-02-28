@@ -33,35 +33,6 @@ ORDER = [
     'database_seq'
 ]
 
-# static part of dynamic charts
-# CHARTS = {
-#     'database_documents_delta': {
-#         'options': [None, 'Documents', 'documents', 'Documents delta', '', 'line'],
-#         'lines': [
-#             ['docs_delta', 'docs', 'absolute', 1, 1],
-#             ['docs_deleted_delta', 'docs_deleted', 'absolute', 1, 1]
-#         ]
-#     },
-#     'database_documents': {
-#         'options': [None, 'Documents', 'documents', 'Documents', '', 'line'],
-#         'lines': [
-#             ['docs', 'docs', 'absolute', 1, 1],
-#             ['docs_deleted', 'docs_deleted', 'absolute', 1, 1]
-#         ]
-#     },
-#     'database_fragmentation': {
-#         'options': [None, 'Database fragmentation', 'Megabytes', 'Database fragmentation', '', 'line'],
-#         'lines': [
-#             ['disk_size_overhead', 'disk size overhead', 'absolute', 1, 1],
-#             ['data_size', 'data size', 'absolute', 1, 1]
-#         ]
-#     },
-#     # dynamic creation in check() because of few databases
-#     'database_seq': {
-#         'options': [None, 'Database seq', 'seq', 'Database seq', '', 'line'],
-#         'lines': []
-#     }
-# }
 
 # DELTA contains previous metrics, to calculate difference 'now - previous'
 # used to avoid non-integer metric presentation in Netdata dashboard
@@ -85,6 +56,7 @@ class Service(SimpleService):
 
         self.new_source_replications = []
         self.order = ORDER
+        self.definitions = {}
         # self.definitions = CHARTS
         self.data = {
             'data_size': 0,
@@ -184,18 +156,8 @@ class Service(SimpleService):
         # no need to refresh() -- first start
         try:
 
-            # doc_delta
-            # self.definitions['database_seq']['lines'].append(
-            #     [self.couch_db_name + '_db_seq', 'db seq', 'absolute', 1, 1]
-            # )
-            # database seq
-            # self.definitions['database_seq']['lines'].append(
-            #     [self.couch_db_name + '_db_seq', 'db seq', 'absolute', 1, 1]
-            # )
-
-
+            # dynamic creation in check() because of few databases
             self.definitions = {
-                # dynamic creation in check() because of few databases
                 'database_documents_delta': {
                     'options': [None, 'Documents', 'documents', 'Documents delta', '', 'line'],
                     'lines': [
