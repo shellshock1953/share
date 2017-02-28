@@ -9,9 +9,6 @@
 # more info: github.com/shellshock1953/share
 
 
-# import sys
-# sys.path.append('/data/shellshock/install/netdata/python.d/python_modules')
-
 # TODO: fix error calc_delta() when specify few databases.
 
 from base import SimpleService
@@ -153,13 +150,13 @@ class Service(SimpleService):
             calc_delta('docs_delta', 'docs_deleted_delta')
 
             # update_seq
-            self.data['db_seq'] = self.database_stats['committed_update_seq']
-            calc_delta('db_seq')
+            self.data[self.couch_db_name + '_db_seq'] = self.database_stats['committed_update_seq']
+            calc_delta(self.couch_db_name + '_db_seq')
 
             """ Get db stats from /_active_task """
             if self.active_tasks:
                 for active_task in self.active_tasks:
-                    if active_task['type'] == 'replication' and self.couch_db_name in active_task['source']:
+                    if active_task['type'] == 'replication' and self.couch_db_name in active_task['target']:
                         source = self.fix_database_name(active_task['source'])
                         target = self.fix_database_name(active_task['target'])
 
@@ -174,8 +171,6 @@ class Service(SimpleService):
                         self.data[source_seq_name] = source_seq
                         self.data[local_seq_name] = local_seq
                         calc_delta(source_seq_name, local_seq_name)
-                        to_log = "%s: %s -- %s:%s" % (source_seq_name,source_seq,local_seq_name,local_seq)
-                        self.error(to_log)
 
         except (ValueError, AttributeError):
             self.error('error in _get_data()')
@@ -272,10 +267,3 @@ class Service(SimpleService):
             self.error("no charts to update")
 
         return updated
-
-
-# s = Service(configuration={'priority': 60000, 'retries': 60, 'update_every': 1}, name=None)
-# s.check()
-# s.run()
-# s._get_data()
-# print s.order
