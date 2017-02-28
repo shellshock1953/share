@@ -9,9 +9,6 @@
 # more info: github.com/shellshock1953/share
 
 
-# import sys
-# sys.path.append('/data/shellshock/install/netdata/python.d/python_modules')
-
 # TODO: fix error calc_delta() when specify few databases.
 
 from base import SimpleService
@@ -270,10 +267,3 @@ class Service(SimpleService):
             self.error("no charts to update")
 
         return updated
-
-
-# s = Service(configuration={'priority': 60000, 'retries': 60, 'update_every': 1}, name=None)
-# s.check()
-# s.run()
-# s._get_data()
-# print s.order
