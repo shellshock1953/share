@@ -174,6 +174,8 @@ class Service(SimpleService):
                         self.data[source_seq_name] = source_seq
                         self.data[local_seq_name] = local_seq
                         calc_delta(source_seq_name, local_seq_name)
+                        to_log = "%s: %s -- %s:%s" % (source_seq_name,source_seq,local_seq_name,local_seq)
+                        self.error(to_log)
 
         except (ValueError, AttributeError):
             self.error('error in _get_data()')
