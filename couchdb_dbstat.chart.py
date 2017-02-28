@@ -8,6 +8,8 @@
 #
 # more info: github.com/shellshock1953/share
 
+# import sys
+# sys.path.append('/data/shellshock/install/netdata/python.d/python_modules/')
 
 # TODO: fix error calc_delta() when specify few databases.
 
@@ -31,36 +33,6 @@ ORDER = [
     'database_seq'
 ]
 
-# static part of dynamic charts
-CHARTS = {
-    'database_documents_delta': {
-        'options': [None, 'Documents', 'documents', 'Documents delta', '', 'line'],
-        'lines': [
-            ['docs_delta', 'docs', 'absolute', 1, 1],
-            ['docs_deleted_delta', 'docs_deleted', 'absolute', 1, 1]
-        ]
-    },
-    'database_documents': {
-        'options': [None, 'Documents', 'documents', 'Documents', '', 'line'],
-        'lines': [
-            ['docs', 'docs', 'absolute', 1, 1],
-            ['docs_deleted', 'docs_deleted', 'absolute', 1, 1]
-        ]
-    },
-    'database_fragmentation': {
-        'options': [None, 'Database fragmentation', 'Megabytes', 'Database fragmentation', '', 'line'],
-        'lines': [
-            ['disk_size_overhead', 'disk size overhead', 'absolute', 1, 1],
-            ['data_size', 'data size', 'absolute', 1, 1]
-        ]
-    },
-    'database_seq': {
-        'options': [None, 'Database seq', 'seq', 'Database seq', '', 'line'],
-        'lines': [
-            ['db_seq', 'db seq', 'absolute', 1, 1]
-        ]
-    }
-}
 
 # DELTA contains previous metrics, to calculate difference 'now - previous'
 # used to avoid non-integer metric presentation in Netdata dashboard
@@ -84,7 +56,8 @@ class Service(SimpleService):
 
         self.new_source_replications = []
         self.order = ORDER
-        self.definitions = CHARTS
+        self.definitions = {}
+        # self.definitions = CHARTS
         self.data = {
             'data_size': 0,
             'disk_size_overhead': 0,
@@ -92,7 +65,6 @@ class Service(SimpleService):
             'docs_deleted': 0,
             'docs_delta': 0,
             'docs_deleted_delta': 0,
-            'db_seq': 0
         }
 
     # get fresh data
@@ -136,22 +108,23 @@ class Service(SimpleService):
 
             """ Get general /db stats """
             # DB fragmentation
-            self.data['data_size'] = self.database_stats['data_size'] / 1000000
-            self.data['disk_size_overhead'] = \
+            self.data[self.couch_db_name + '_data_size'] = self.database_stats['data_size'] / 1000000
+            self.data[self.couch_db_name + '_disk_size_overhead'] = \
                 (self.database_stats['disk_size'] - self.database_stats['data_size']) / 1000000
 
             # DB documents
-            self.data['docs'] = self.database_stats['doc_count']
-            self.data['docs_deleted'] = self.database_stats['doc_del_count']
+            self.data[self.couch_db_name + '_docs'] = self.database_stats['doc_count']
+            self.data[self.couch_db_name + '_docs_deleted'] = self.database_stats['doc_del_count']
 
             # DB delta documents
-            self.data['docs_delta'] = self.database_stats['doc_count']
-            self.data['docs_deleted_delta'] = self.database_stats['doc_del_count']
-            calc_delta('docs_delta', 'docs_deleted_delta')
+            self.data[self.couch_db_name + '_docs_delta'] = self.database_stats['doc_count']
+            self.data[self.couch_db_name + '_docs_deleted_delta'] = self.database_stats['doc_del_count']
+            calc_delta(self.couch_db_name + '_docs_delta',
+                       self.couch_db_name + '_docs_deleted_delta')
 
             # update_seq
-            self.data['db_seq'] = self.database_stats['committed_update_seq']
-            calc_delta('db_seq')
+            self.data[self.couch_db_name + '_db_seq'] = self.database_stats['committed_update_seq']
+            calc_delta(self.couch_db_name + '_db_seq')
 
             """ Get db stats from /_active_task """
             if self.active_tasks:
@@ -182,6 +155,38 @@ class Service(SimpleService):
     def check(self):
         # no need to refresh() -- first start
         try:
+
+            # dynamic creation in check() because of few databases
+            self.definitions = {
+                'database_documents_delta': {
+                    'options': [None, 'Documents', 'documents', 'Documents delta', '', 'line'],
+                    'lines': [
+                        [self.couch_db_name + '_docs_delta', 'docs', 'absolute', 1, 1],
+                        [self.couch_db_name + '_docs_deleted_delta', 'docs_deleted', 'absolute', 1, 1]
+                    ]
+                },
+                'database_documents': {
+                    'options': [None, 'Documents', 'documents', 'Documents', '', 'line'],
+                    'lines': [
+                        [self.couch_db_name + '_docs', 'docs', 'absolute', 1, 1],
+                        [self.couch_db_name + '_docs_deleted', 'docs_deleted', 'absolute', 1, 1]
+                    ]
+                },
+                'database_fragmentation': {
+                    'options': [None, 'Database fragmentation', 'Megabytes', 'Database fragmentation', '', 'line'],
+                    'lines': [
+                        [self.couch_db_name + '_disk_size_overhead', 'disk size overhead', 'absolute', 1, 1],
+                        [self.couch_db_name + '_data_size', 'data size', 'absolute', 1, 1]
+                    ]
+                },
+                'database_seq': {
+                    'options': [None, 'Database seq', 'seq', 'Database seq', '', 'line'],
+                    'lines': [
+                         [self.couch_db_name + '_db_seq', 'db seq', 'absolute', 1, 1]
+                    ]
+                }
+            }
+
             # init replication charts
             status = self.create_replication_charts()
             return status
@@ -267,3 +272,8 @@ class Service(SimpleService):
             self.error("no charts to update")
 
         return updated
+
+
+# s = Service(configuration={'update_every':update_every,'retries':retries,'priority':priority},name=None)
+# s.check()
+# s.run()
