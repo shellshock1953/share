@@ -68,6 +68,7 @@ class Service(SimpleService):
 
         self.tasks_to_monitor = ['indexer', 'database_compaction', 'view_compaction', 'replication']
         self.couch_url = configuration['couch_url']
+        # self.couch_url = 'http://127.0.0.1:5984/'
         if len(self.couch_url) is 0: raise Exception('Invalid couch url')
 
         self.couch_active_task_url = self.couch_url + '_active_tasks'
@@ -154,4 +155,5 @@ class Service(SimpleService):
 
 
 # s = Service(configuration={'priority': 60000, 'retries': 60, 'update_every': 1}, name=None)
+# s.run()
 # print s._get_data()

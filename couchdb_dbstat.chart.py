@@ -144,7 +144,7 @@ class Service(SimpleService):
 
             """ Get db stats from /_active_task """
             for active_task in self.active_tasks:
-                if active_task['type'] == 'replication':
+                if active_task['type'] == 'replication' and self.couch_db_name in active_task['source']:
                     source = self.fix_database_name(active_task['source'])
                     target = self.fix_database_name(active_task['target'])
 
@@ -198,7 +198,7 @@ class Service(SimpleService):
                 self.order.append(source)
                 source_seq_var = source + '_source_seq'
                 local_seq_var = source + '_local_seq'
-                update_seq_var = source + '_update_seq'
+                db_seq_var = source + '_db_seq'
 
                 # CHARTS
                 self.definitions.update({
@@ -207,7 +207,7 @@ class Service(SimpleService):
                         'lines': [
                             [source_seq_var, 'source_seq', 'absolute', 1, 1],
                             [local_seq_var, 'local_seq', 'absolute', 1, 1],
-                            [update_seq_var, 'update_seq', 'absolute', 1, 1]
+                            [db_seq_var, 'update_seq', 'absolute', 1, 1]
                         ]
                     }
                 })
