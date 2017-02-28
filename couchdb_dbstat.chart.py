@@ -92,7 +92,8 @@ class Service(SimpleService):
             'docs': 0,
             'docs_deleted': 0,
             'docs_delta': 0,
-            'docs_deleted_delta': 0
+            'docs_deleted_delta': 0,
+            'db_seq': 0
         }
 
     # get fresh data
@@ -146,7 +147,6 @@ class Service(SimpleService):
 
             # DB delta documents
             self.data['docs_delta'] = self.database_stats['doc_count']
-            calc_delta('docs_delta')
             self.data['docs_deleted_delta'] = self.database_stats['doc_del_count']
             calc_delta('docs_delta', 'docs_deleted_delta')
 
@@ -156,22 +156,23 @@ class Service(SimpleService):
 
             # TODO: delta seq in general st
             """ Get db stats from /_active_task """
-            for active_task in self.active_tasks:
-                if active_task['type'] == 'replication' and self.couch_db_name in active_task['source']:
-                    source = self.fix_database_name(active_task['source'])
-                    target = self.fix_database_name(active_task['target'])
+            if self.active_tasks:
+                for active_task in self.active_tasks:
+                    if active_task['type'] == 'replication' and self.couch_db_name in active_task['source']:
+                        source = self.fix_database_name(active_task['source'])
+                        target = self.fix_database_name(active_task['target'])
 
-                    # TODO: chart name be like: source + "_source_replication"
-                    if source not in self.order:
-                        self.new_source_replications.append(source)
+                        # TODO: chart name be like: source + "_source_replication"
+                        if source not in self.order:
+                            self.new_source_replications.append(source)
 
-                    source_seq = active_task['source_seq']
-                    local_seq = active_task['checkpointed_source_seq']
-                    source_seq_name = source + '_source_seq'
-                    local_seq_name = source + '_local_seq'
-                    self.data[source_seq_name] = source_seq
-                    self.data[local_seq_name] = local_seq
-                    calc_delta(source_seq_name, local_seq_name)
+                        source_seq = active_task['source_seq']
+                        local_seq = active_task['checkpointed_source_seq']
+                        source_seq_name = source + '_source_seq'
+                        local_seq_name = source + '_local_seq'
+                        self.data[source_seq_name] = source_seq
+                        self.data[local_seq_name] = local_seq
+                        calc_delta(source_seq_name, local_seq_name)
 
         except (ValueError, AttributeError):
             self.error('error in _get_data()')
