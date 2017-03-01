@@ -234,6 +234,5 @@ class Service(SimpleService):
 
 # s = Service(configuration={'priority': 60000, 'retries': 60, 'update_every': 1}, name=None)
 # s.check()
-# s.run()
 # s._get_data()
 # print s.definitions
