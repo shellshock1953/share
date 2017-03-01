@@ -65,8 +65,8 @@ class Service(SimpleService):
         SimpleService.__init__(self, configuration=configuration, name=name)
 
         self.tasks_to_monitor = ['indexer', 'database_compaction', 'view_compaction', 'replication']
-        # self.couch_url = configuration['couch_url']
-        self.couch_url = 'http://127.0.0.1:5984/'
+        self.couch_url = configuration['couch_url']
+        # self.couch_url = 'http://127.0.0.1:5984/'
         if len(self.couch_url) is 0: raise Exception('Invalid couch url')
 
         self.couch_active_task_url = self.couch_url + '_active_tasks'
@@ -88,8 +88,8 @@ class Service(SimpleService):
     # get fresh data
     def refresh(self):
         # open active tasks urls
-        # active_tasks_url = urllib2.urlopen(self.couch_active_task_url).read()
-        active_tasks_url = open('active_task.phalanx.json').read()
+        active_tasks_url = urllib2.urlopen(self.couch_active_task_url).read()
+        # active_tasks_url = open('active_task.phalanx.json').read()
         self.active_tasks = json.loads(active_tasks_url)
         #  open dbs urls
         all_dbs_url = urllib2.urlopen(self.couch_all_dbs_url).read()
