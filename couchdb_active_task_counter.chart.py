@@ -172,6 +172,8 @@ class Service(SimpleService):
                         if db == active_task_database:
                             progress = active_task['progress']
                             design_document = active_task['design_document']
+                            if design_document[0] == '_':
+                                design_document = design_document[1:]
                             design_document = design_document.replace('/','.')
                             chart_var = db + '_' + task_type + '_' + design_document
                             new_db_task_chart(task_type, chart_var)
