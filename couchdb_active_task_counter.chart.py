@@ -117,9 +117,11 @@ class Service(SimpleService):
                     self.definitions[monitoring_task]['lines'].append(
                         [monitoring_task + '_' + db, db, 'absolute', 1, 1])
 
-                    if db not in self.order: self.order.append(db)
+                    percentage_chart_name = monitoring_task + '_percentage'
+                    if percentage_chart_name not in self.order:
+                        self.order.append(percentage_chart_name)
                     self.definitions.update({
-                        db: {
+                        percentage_chart_name: {
                             'options': [None, 'Task progress', 'percentage', 'Task progress', '', 'line'],
                             'lines': []
                         }
@@ -131,10 +133,9 @@ class Service(SimpleService):
             return False
 
     def _get_data(self):
-        def new_db_task_chart(db, chart_var):
+        def new_db_task_chart(taks_type, chart_var):
             if not self.data.has_key(chart_var):
-                self.order.append(db)
-                self.definitions[db]['lines'].append(
+                self.definitions[taks_type+'_percentage']['lines'].append(
                     [chart_var, chart_var, 'absolute', 1, 1]
                 )
         try:
@@ -163,9 +164,7 @@ class Service(SimpleService):
                     if active_task_database == db:
                         self.data[active_task['type'] + '_' + db] += 1
 
-            # calculate task percentage per db
-            for active_task in self.active_tasks:
-                for db in self.all_dbs:
+                    # calculate task percentage per db
                     task_type = active_task['type']
 
                     #  indexer / view_compaction
@@ -175,7 +174,7 @@ class Service(SimpleService):
                             design_document = active_task['design_document']
                             design_document = design_document.replace('/','.')
                             chart_var = db + '_' + task_type + '_' + design_document
-                            new_db_task_chart(db, chart_var)
+                            new_db_task_chart(task_type, chart_var)
                             self.data[chart_var] = progress
 
                     #  database_compaction
@@ -183,7 +182,7 @@ class Service(SimpleService):
                         if db == active_task['database']:
                             progress = active_task['progress']
                             chart_var = db + '_' + task_type
-                            new_db_task_chart(db, chart_var)
+                            new_db_task_chart(task_type, chart_var)
                             self.data[chart_var] = progress
 
                     #  replication
@@ -193,7 +192,7 @@ class Service(SimpleService):
                             source_raw = active_task['source']
                             source = self.fix_database_name(source_raw)
                             chart_var = db + '_' + task_type + '_' + source
-                            new_db_task_chart(db, chart_var)
+                            new_db_task_chart(task_type, chart_var)
                             self.data[chart_var] = progress
 
 
