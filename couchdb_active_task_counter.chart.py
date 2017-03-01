@@ -164,12 +164,12 @@ class Service(SimpleService):
                     if active_task_database == db:
                         self.data[active_task['type'] + '_' + db] += 1
 
-                    # calculate task percentage per db
+            # calculate task percentage
                     task_type = active_task['type']
 
                     #  indexer / view_compaction
                     if task_type == 'indexer' or task_type == 'view_compaction':
-                        if db == active_task['database']:
+                        if active_task_database == active_task['database']:
                             progress = active_task['progress']
                             design_document = active_task['design_document']
                             design_document = design_document.replace('/','.')
@@ -179,7 +179,7 @@ class Service(SimpleService):
 
                     #  database_compaction
                     elif task_type == 'database_compaction':
-                        if db == active_task['database']:
+                        if active_task_database == active_task['database']:
                             progress = active_task['progress']
                             chart_var = db + '_' + task_type
                             new_db_task_chart(task_type, chart_var)
@@ -187,7 +187,7 @@ class Service(SimpleService):
 
                     #  replication
                     elif task_type == 'replication':
-                        if db in active_task['target']:
+                        if active_task_database in active_task['target']:
                             progress = active_task['progress']
                             source_raw = active_task['source']
                             source = self.fix_database_name(source_raw)
