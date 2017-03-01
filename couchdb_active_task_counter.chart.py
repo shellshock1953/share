@@ -169,7 +169,7 @@ class Service(SimpleService):
 
                     #  indexer / view_compaction
                     if task_type == 'indexer' or task_type == 'view_compaction':
-                        if active_task_database == active_task['database']:
+                        if db == active_task_database:
                             progress = active_task['progress']
                             design_document = active_task['design_document']
                             design_document = design_document.replace('/','.')
@@ -179,7 +179,7 @@ class Service(SimpleService):
 
                     #  database_compaction
                     elif task_type == 'database_compaction':
-                        if active_task_database == active_task['database']:
+                        if db == active_task_database:
                             progress = active_task['progress']
                             chart_var = db + '_' + task_type
                             new_db_task_chart(task_type, chart_var)
@@ -187,7 +187,7 @@ class Service(SimpleService):
 
                     #  replication
                     elif task_type == 'replication':
-                        if active_task_database in active_task['target']:
+                        if db == active_task_database:
                             progress = active_task['progress']
                             source_raw = active_task['source']
                             source = self.fix_database_name(source_raw)
