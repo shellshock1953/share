@@ -117,6 +117,7 @@ class Service(SimpleService):
                     self.definitions[monitoring_task]['lines'].append(
                         [monitoring_task + '_' + db, db, 'absolute', 1, 1])
 
+                    if db not in self.order: self.order.append(db)
                     self.definitions.update({
                         db: {
                             'options': [None, 'Task progress', 'percentage', 'Task progress', '', 'line'],
@@ -132,11 +133,10 @@ class Service(SimpleService):
     def _get_data(self):
         def new_db_task_chart(db, chart_var):
             if not self.data.has_key(chart_var):
-                if db not in self.order:
-                    self.order.append(db)
-                    self.definitions[db]['lines'].append(
-                        [chart_var, chart_var, 'absolute', 1, 1]
-                    )
+                self.order.append(db)
+                self.definitions[db]['lines'].append(
+                    [chart_var, chart_var, 'absolute', 1, 1]
+                )
         try:
             # get fresh data
             self.refresh()
@@ -189,10 +189,7 @@ class Service(SimpleService):
                     #  replication
                     elif task_type == 'replication':
                         if db in active_task['target']:
-                            if active_task['continuous']:
-                                    progress = -1
-                            else:
-                                progress = active_task['progress']
+                            progress = active_task['progress']
                             source_raw = active_task['source']
                             source = self.fix_database_name(source_raw)
                             chart_var = db + '_' + task_type + '_' + source
