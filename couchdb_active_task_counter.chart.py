@@ -137,8 +137,10 @@ class Service(SimpleService):
         self.definitions[task_type + '_percentage']['lines'].append(
             [chart_var, chart_var, 'absolute', 1, 1]
         )
+        # TODO: don`t iterate like this
         for line in self.definitions[task_type + '_percentage']['lines']:
             self.dimension(*line)
+        self.commit()
 
     def _get_data(self):
 
@@ -146,7 +148,7 @@ class Service(SimpleService):
             # get fresh data
             self.refresh()
 
-            zero values EVERY time
+            # zero values EVERY time
             for key in self.data.keys():
                 self.data[key] = 0
 
