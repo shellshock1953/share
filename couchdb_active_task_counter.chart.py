@@ -65,8 +65,8 @@ class Service(SimpleService):
         SimpleService.__init__(self, configuration=configuration, name=name)
 
         self.tasks_to_monitor = ['indexer', 'database_compaction', 'view_compaction', 'replication']
-        self.couch_url = configuration['couch_url']
-        # self.couch_url = 'http://127.0.0.1:5984/'
+        # self.couch_url = configuration['couch_url']
+        self.couch_url = 'http://127.0.0.1:5984/'
         if len(self.couch_url) is 0: raise Exception('Invalid couch url')
 
         self.couch_active_task_url = self.couch_url + '_active_tasks'
@@ -77,7 +77,7 @@ class Service(SimpleService):
         self.new_source_replications = []
         self.order = ORDER
         self.definitions = CHARTS
-        self.new_db_tasks = []
+        self.new_tasks = []
         self.data = {
             'indexer_task': 0,
             'database_compaction_task': 0,
@@ -133,11 +133,12 @@ class Service(SimpleService):
             self.error("err in check()")
             return False
 
-    def add_lines_to_percentage_charts(self, taks_type, chart_var):
-        self.definitions[taks_type+'_percentage']['lines'].append(
+    def add_lines_to_percentage_charts(self, task_type, chart_var):
+        self.definitions[task_type + '_percentage']['lines'].append(
             [chart_var, chart_var, 'absolute', 1, 1]
         )
-        self.commit()
+        for line in self.definitions[task_type + '_percentage']['lines']:
+            self.dimension(*line)
 
     def _get_data(self):
 
@@ -145,7 +146,7 @@ class Service(SimpleService):
             # get fresh data
             self.refresh()
 
-            # zero values EVERY time
+            zero values EVERY time
             for key in self.data.keys():
                 self.data[key] = 0
 
@@ -164,8 +165,11 @@ class Service(SimpleService):
                     except KeyError:
                         active_task_database = self.fix_database_name(active_task['target'])
 
-                    if active_task_database == db:
-                        self.data[active_task['type'] + '_' + db] += 1
+                    try:
+                        if active_task_database == db:
+                            self.data[active_task['type'] + '_' + db] += 1
+                    except IndexError:  # it`s percentage data
+                        pass
 
                     """ calculate task percentage """
                     task_type = active_task['type']
@@ -177,64 +181,40 @@ class Service(SimpleService):
                             design_document = active_task['design_document']
                             if design_document[0] == '_':
                                 design_document = design_document[1:]
-                            design_document = design_document.replace('/','.')
+                            design_document = design_document.replace('/', '.')
                             chart_var = db + '_' + task_type + '_' + design_document
-                            if not self.data.has_key(chart_var): self.add_lines_to_percentage_charts(task_type, chart_var)
+                            if not self.data.has_key(chart_var): self.new_tasks.append()
                             self.data[chart_var] = progress
 
-                    #  database_compaction
+                    # database_compaction
                     elif task_type == 'database_compaction':
                         if db == active_task_database:
                             progress = active_task['progress']
                             chart_var = db + '_' + task_type
-                            if not self.data.has_key(chart_var): self.add_lines_to_percentage_charts(task_type, chart_var)
+                            if not self.data.has_key(chart_var): self.add_lines_to_percentage_charts(task_type,
+                                                                                                     chart_var)
                             self.data[chart_var] = progress
 
-                    #  replication
+                    # replication
                     elif task_type == 'replication':
                         if db == active_task_database:
                             progress = active_task['progress']
                             source_raw = active_task['source']
                             source = self.fix_database_name(source_raw)
                             chart_var = db + '_' + task_type + '_' + source
-                            if not self.data.has_key(chart_var): self.add_lines_to_percentage_charts(task_type, chart_var)
+                            if not self.data.has_key(chart_var): self.add_lines_to_percentage_charts(task_type,
+                                                                                                     chart_var)
                             self.data[chart_var] = progress
 
         except (ValueError, AttributeError):
+            self.error('error in _get_data()')
             return None
         return self.data
-
-    # modified update() to check for a new replication tasks
-    def update(self, interval):
-        data = self._get_data()
-        if data is None:
-            self.debug("failed to receive data during update().")
-            return False
-
-        updated = False
-
-        # do we have new replication charts to be created?
-
-        for chart in self.order:
-            if self.begin(self.chart_name + "." + chart, interval):
-                updated = True
-                for dim in self.definitions[chart]['lines']:
-                    try:
-                        self.set(dim[0], data[dim[0]])
-                    except KeyError:
-                        pass
-                self.end()
-
-        self.commit()
-        if not updated:
-            self.error("no charts to update")
-
-        return updated
-
 
 
 # s = Service(configuration={'priority': 60000, 'retries': 60, 'update_every': 1}, name=None)
 # s.check()
 # s.create()
 # s.update(1)
+# s.run()
 # print s.definitions
