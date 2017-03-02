@@ -138,9 +138,10 @@ class Service(SimpleService):
             [chart_var, chart_var, 'absolute', 1, 1]
         )
         # TODO: don`t iterate like this
-        for line in self.definitions[task_type + '_percentage']['lines']:
-            self.dimension(*line)
-        self.commit()
+        self.create()
+        # for line in self.definitions[task_type + '_percentage']['lines']:
+        #     self.dimension(*line)
+        # self.commit()
 
     def _get_data(self):
 
