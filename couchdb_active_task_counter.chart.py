@@ -7,7 +7,7 @@
 
 # import sys
 # sys.path.append('/data/shellshock/install/netdata/python.d/python_modules')
-
+#
 from base import SimpleService
 import json
 
@@ -22,10 +22,10 @@ update_every = 10
 
 ORDER = [
     'active_tasks',
-    'indexer',
-    'replication',
-    'database_compaction',
-    'view_compaction'
+    'indexer_percentage',
+    'replication_percentage',
+    'database_compaction_percentage',
+    'view_compaction_percentage'
 ]
 
 CHARTS = {
@@ -40,21 +40,21 @@ CHARTS = {
             ['view_compaction_task', 'view_compaction', 'absolute', 1, 1]
         ]
     },
-    # show number of bases per each task
-    'indexer': {
-        'options': [None, 'Indexer task', 'tasks', 'Indexer task', '', 'line'],
+    # show percentage per dbs
+    'indexer_percentage': {
+        'options': [None, 'Indexer task', 'percentage', 'Indexer task percentage', '', 'line'],
         'lines': []
     },
-    'database_compaction': {
-        'options': [None, 'DB compaction task', 'tasks', 'DB compaction task', '', 'line'],
+    'database_compaction_percentage': {
+        'options': [None, 'DB compaction task', 'percentage', 'DB compaction task percentage', '', 'line'],
         'lines': []
     },
-    'view_compaction': {
-        'options': [None, 'View compaction task', 'tasks', 'View compaction task', '', 'line'],
+    'view_compaction_percentage': {
+        'options': [None, 'View compaction task', 'percentage', 'View compaction task percentage', '', 'line'],
         'lines': []
     },
-    'replication': {
-        'options': [None, 'Replication task', 'tasks', 'Replication task', '', 'line'],
+    'replication_percentage': {
+        'options': [None, 'Replication task', 'percentage', 'Replication task percentage', '', 'line'],
         'lines': []
     }
 }
@@ -74,10 +74,9 @@ class Service(SimpleService):
 
         self.refresh()
 
-        self.new_source_replications = []
+        self.new_chart_vars = []
         self.order = ORDER
         self.definitions = CHARTS
-        self.new_tasks = []
         self.data = {
             'indexer_task': 0,
             'database_compaction_task': 0,
@@ -85,8 +84,8 @@ class Service(SimpleService):
             'replication_task': 0,
         }
 
-    # get fresh data
     def refresh(self):
+        """ get fresh data """
         # open active tasks urls
         active_tasks_url = urllib2.urlopen(self.couch_active_task_url).read()
         # active_tasks_url = open('active_task.phalanx.json').read()
@@ -95,55 +94,24 @@ class Service(SimpleService):
         all_dbs_url = urllib2.urlopen(self.couch_all_dbs_url).read()
         self.all_dbs = json.loads(all_dbs_url)
 
-    # from 'http://ip:port/db' cut 'db' only
-    def fix_database_name(self, database_name):
-        if '/' in database_name:
-            fixed_database_name = database_name.split('/')[3]
-            return fixed_database_name
-        else:
-            return database_name
-
-    # check() calls once -- before run()
-    def check(self):
-        # no need to refresh() -- first start
-        try:
-            # init task and DBs per task presentation
-            """ creating dynamic counter charts """
-            for monitoring_task in self.tasks_to_monitor:
-                self.data[monitoring_task + '_task'] = 0
-                for db in self.all_dbs:
-                    if db[0] == '_': continue
-                    self.data[monitoring_task + '_' + db] = 0
-                    self.definitions[monitoring_task]['lines'].append(
-                        [monitoring_task + '_' + db, db, 'absolute', 1, 1])
-
-                    """ creating defacto-dynamic task percentage charts """
-                    percentage_chart_name = monitoring_task + '_percentage'
-                    if percentage_chart_name not in self.order:
-                        self.order.append(percentage_chart_name)
-                    self.definitions.update({
-                        percentage_chart_name: {
-                            'options': [None, 'Task progress', 'percentage', 'Task progress', '', 'line'],
-                            'lines': []
-                        }
-                    })
-
-            return True
-        except:
-            self.error("err in check()")
-            return False
-
-    def add_lines_to_percentage_charts(self, task_type, chart_var):
-        self.definitions[task_type + '_percentage']['lines'].append(
-            [chart_var, chart_var, 'absolute', 1, 1]
-        )
-        # TODO: don`t iterate like this
-        self.create()
-        # for line in self.definitions[task_type + '_percentage']['lines']:
-        #     self.dimension(*line)
-        # self.commit()
 
     def _get_data(self):
+        def fix_database_name(database_name):
+            """ unification db name
+            :arg http://ip:port/db
+            :return ip.db
+            """
+            if '/' in database_name:
+                fixed_database_name = database_name.split('/')[3]
+                return fixed_database_name
+            else:
+                return database_name
+
+        def new_data_item(task_type, chart_var):
+            if self.data.has_key(chart_var):
+                pass
+            else:
+               self.new_chart_vars.append([task_type,chart_var])
 
         try:
             # get fresh data
@@ -153,60 +121,47 @@ class Service(SimpleService):
             for key in self.data.keys():
                 self.data[key] = 0
 
-            """ calculate running active tasks """
+            # calculate running tasks
             for active_task in self.active_tasks:
                 for monitoring_task in self.tasks_to_monitor:
                     if monitoring_task == active_task['type']:
                         self.data[monitoring_task + '_task'] += 1
 
-            """ calculate dbs per task """
+            # calculate tasks percentage
             for db in self.all_dbs:
                 if db[0] == '_': continue
-                for active_task in self.active_tasks:
+                for task in self.active_tasks:
                     try:
-                        active_task_database = active_task['database']
-                    except KeyError:
-                        active_task_database = self.fix_database_name(active_task['target'])
+                        if db in task['database']:
+                            task_db = fix_database_name(task['database'])
+                    except:
+                        if db in task['target']:
+                            task_db = fix_database_name(task['target'])
+                        else:
+                            continue
 
-                    try:
-                        if active_task_database == db:
-                            self.data[active_task['type'] + '_' + db] += 1
-                    except IndexError:  # it`s percentage data
-                        pass
+                    if db == task_db:
+                        task_type = task['type']
+                        progress = task['progress']
 
-                    """ calculate task percentage """
-                    task_type = active_task['type']
-
-                    #  indexer / view_compaction
-                    if task_type == 'indexer' or task_type == 'view_compaction':
-                        if db == active_task_database:
-                            progress = active_task['progress']
-                            design_document = active_task['design_document']
-                            if design_document[0] == '_':
-                                design_document = design_document[1:]
-                            design_document = design_document.replace('/', '.')
-                            chart_var = db + '_' + task_type + '_' + design_document
-                            if not self.data.has_key(chart_var): self.new_tasks.append()
+                        # indexer / view_compaction
+                        if task_type == 'indexer' or task_type == 'view_compaction':
+                            design_document = task['design_document'].replace('/', '_')
+                            chart_var = task_type + "_" + db + design_document
+                            new_data_item(task_type, chart_var)
                             self.data[chart_var] = progress
 
-                    # database_compaction
-                    elif task_type == 'database_compaction':
-                        if db == active_task_database:
-                            progress = active_task['progress']
-                            chart_var = db + '_' + task_type
-                            if not self.data.has_key(chart_var): self.add_lines_to_percentage_charts(task_type,
-                                                                                                     chart_var)
+                        # database_compaction
+                        if task_type == 'database_compaction':
+                            chart_var = task_type + "_" + db
+                            new_data_item(task_type, chart_var)
                             self.data[chart_var] = progress
 
-                    # replication
-                    elif task_type == 'replication':
-                        if db == active_task_database:
-                            progress = active_task['progress']
-                            source_raw = active_task['source']
-                            source = self.fix_database_name(source_raw)
-                            chart_var = db + '_' + task_type + '_' + source
-                            if not self.data.has_key(chart_var): self.add_lines_to_percentage_charts(task_type,
-                                                                                                     chart_var)
+                        # replication
+                        if task_type == 'replication':
+                            source = fix_database_name(task['source'])
+                            chart_var = task_type + "_" + source + '_' + db
+                            new_data_item(task_type, chart_var)
                             self.data[chart_var] = progress
 
         except (ValueError, AttributeError):
@@ -214,10 +169,56 @@ class Service(SimpleService):
             return None
         return self.data
 
+    def update(self, interval):
+        """
+        Update charts
+        :param interval: int
+        :return: boolean
+        """
+        data = self._get_data()
+        if data is None:
+            self.debug("failed to receive data during update().")
+            return False
+
+        if self.new_chart_vars:
+           self.append_new_lines()
+
+        updated = False
+        for chart in self.order:
+            if self.begin(self.chart_name + "." + chart, interval):
+                updated = True
+                for dim in self.definitions[chart]['lines']:
+                    try:
+                        self.set(dim[0], data[dim[0]])
+                    except KeyError:
+                        pass
+                self.end()
+
+        self.commit()
+        if not updated:
+            self.error("no charts to update")
+
+        return updated
+
+    def append_new_lines(self):
+        for chart_task_and_var in self.new_chart_vars:
+            chart_task = chart_task_and_var[0]
+            chart_var = chart_task_and_var[1]
+            for chart_id in self.order:
+                if chart_task + '_percentage' == chart_id:
+                    self.definitions[chart_id]['lines'].append(
+                        [chart_var, chart_var, 'absolute', 1, 1]
+                    )
+                    self.new_chart_vars.remove([chart_task, chart_var])
+
+        # TODO: dont user create()
+        # instead use self.dimension(*line)
+        self.create()
+
+
 
 # s = Service(configuration={'priority': 60000, 'retries': 60, 'update_every': 1}, name=None)
 # s.check()
 # s.create()
 # s.update(1)
 # s.run()
-# print s.definitions
