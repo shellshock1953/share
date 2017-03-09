@@ -46,8 +46,6 @@ class Service(SimpleService):
         # self.couch_db_name = 'public_sandbox'
         self.couch_db_url = self.couch_url + self.couch_db_name
 
-        self.refresh()
-
         self.new_source_replications = []
         self.order = ORDER
         self.definitions = {}
