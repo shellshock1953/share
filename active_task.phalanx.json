@@ -1,0 +1,18 @@
+[
+  {"pid":"<0.460.0>","changes_done":116453,"database":"edge_db","design_document":"_design/tenders","progress":4,"started_on":1486991859,"total_changes":2377745,"type":"indexer","updated_on":1486992058},
+
+  {"pid":"<0.555.0>","changes_done":109989,"database":"public_sandbox","design_document":"_design/plans","progress":4,"started_on":1486991868,"total_changes":2377745,"type":"indexer","updated_on":1486992059},
+
+  {"pid":"<0.678.0>","changes_done":100394,"database":"public_sandbox","design_document":"_design/contracts","progress":4,"started_on":1486991880,"total_changes":2377745,"type":"indexer","updated_on":1486992059},
+
+  {"pid":"<0.758.0>","changes_done":98576,"database":"public_sandbox","design_document":"_design/auctions","progress":4,"started_on":1486991887,"total_changes":2377745,"type":"indexer","updated_on":1486992059},
+
+  {"checkpoint_interval": 5000,"checkpointed_source_seq": 248337,"continuous": false,"doc_id": null,"doc_write_failures": 0,"docs_read": 198568,"docs_written": 198568,"missing_revisions_found": 198568,"pid": "<0.26117.559>","progress": 7,"replication_id": "176934c393c0d1990f8f56cccc7a226f","revisions_checked": 198568,"source": "public_production_db","source_seq": 3139017,"started_on": 1486974880,"target": "public_sandbox","type": "replication","updated_on": 1486980893},
+
+  {"pid":"<0.555.0>","changes_done":109989,"database":"shellshock","design_document":"_design/plans","progress":4,"started_on":1486991868,"total_changes":2377745,"type":"view_compaction","updated_on":1486992059},
+
+  {"pid":"<0.555.0>","changes_done":109989,"database":"shellshock","design_document":"_design/plans","progress":4,"started_on":1486991868,"total_changes":2377745,"type":"indexer","updated_on":1486992059},
+
+  {"pid":"<0.555.0>","changes_done":109989,"database":"shellshock","design_document":"_design/plans","progress":4,"started_on":1486991868,"total_changes":2377745,"type":"database_compaction","updated_on":1486992059}
+]
+
