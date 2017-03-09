@@ -5,9 +5,6 @@
 # more info: github.com/shellshock1953/share
 
 
-# import sys
-# sys.path.append('/data/shellshock/install/netdata/python.d/python_modules')
-#
 from base import SimpleService
 import json
 
@@ -214,11 +211,3 @@ class Service(SimpleService):
         # TODO: dont user create()
         # instead use self.dimension(*line)
         self.create()
-
-
-
-# s = Service(configuration={'priority': 60000, 'retries': 60, 'update_every': 1}, name=None)
-# s.check()
-# s.create()
-# s.update(1)
-# s.run()
