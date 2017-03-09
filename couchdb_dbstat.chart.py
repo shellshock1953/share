@@ -46,18 +46,13 @@ class Service(SimpleService):
         # self.couch_db_name = 'public_sandbox'
         self.couch_db_url = self.couch_url + self.couch_db_name
 
+        self.data = {}
+        self.refresh()
+
         self.new_source_replications = []
         self.order = ORDER
         self.definitions = {}
         # self.definitions = CHARTS
-        self.data = {
-            'data_size': 0,
-            'disk_size_overhead': 0,
-            'docs': 0,
-            'docs_deleted': 0,
-            'docs_delta': 0,
-            'docs_deleted_delta': 0,
-        }
 
     # get fresh data
     def refresh(self):
