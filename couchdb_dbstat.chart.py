@@ -274,6 +274,7 @@ class Service(SimpleService):
         return updated
 
 
+
 # s = Service(configuration={'update_every':update_every,'retries':retries,'priority':priority,'db':'edge_db'},name=None)
 # s.check()
 # s.create()
