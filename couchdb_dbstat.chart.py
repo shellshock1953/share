@@ -72,6 +72,9 @@ class Service(SimpleService):
             self.database_stats = json.loads(database_open)
         except urllib2.HTTPError:
             self.error('Cant open database. Check conf to correct db-name')
+            # zero data
+            for key in self.data.keys():
+                self.data[key] = 0
             return False
 
     def _get_data(self):
