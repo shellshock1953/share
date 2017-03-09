@@ -25,6 +25,8 @@ priority = 70030
 retries = 60
 update_every = 5
 
+CHARTS = {}
+
 # static part of dynamic order
 ORDER = [
     'database_documents_delta',
@@ -36,36 +38,29 @@ ORDER = [
 
 # DELTA contains previous metrics, to calculate difference 'now - previous'
 # used to avoid non-integer metric presentation in Netdata dashboard
-DELTA = {}
 
 
 class Service(SimpleService):
     def __init__(self, configuration=None, name=None):
         SimpleService.__init__(self, configuration=configuration, name=name)
         self.tasks_to_monitor = ['indexer', 'database_compaction', 'view_compaction', 'replication']
-        self.couch_url = configuration['couch_url']
-        # self.couch_url = 'http://127.0.0.1:5984/'
+        # self.couch_url = configuration['couch_url']
+        self.couch_url = 'http://127.0.0.1:5984/'
         self.couch_active_task_url = self.couch_url + '_active_tasks'
         if len(self.couch_url) is 0: raise Exception('Invalid couch url')
 
         self.couch_db_name = configuration['db']
-        # self.couch_db_name = 'public_sandbox'
+        # self.couch_db_name = 'tracking'
         self.couch_db_url = self.couch_url + self.couch_db_name
 
         self.refresh()
 
         self.new_source_replications = []
         self.order = ORDER
-        self.definitions = {}
-        # self.definitions = CHARTS
-        self.data = {
-            'data_size': 0,
-            'disk_size_overhead': 0,
-            'docs': 0,
-            'docs_deleted': 0,
-            'docs_delta': 0,
-            'docs_deleted_delta': 0,
-        }
+        # self.definitions = {}
+        self.definitions = CHARTS
+        self.data = {}
+        self.DELTA = {}
 
     # get fresh data
     def refresh(self):
@@ -77,6 +72,7 @@ class Service(SimpleService):
             database_open = urllib2.urlopen(self.couch_db_url).read()
             self.database_stats = json.loads(database_open)
         except urllib2.HTTPError:
+            # TODO: zero vals when db has been removed
             self.error('Cant open database. Check conf to correct db-name')
             return False
 
@@ -87,16 +83,16 @@ class Service(SimpleService):
         def calc_delta(*args):
             for metric in args:
                 if self.data[metric] is None: self.data[metric] = 0
-                if metric in DELTA:
+                if metric in self.DELTA:
                     # prevent negative values
-                    if self.data[metric] < DELTA[metric]:
-                        DELTA[metric] = 0
+                    if self.data[metric] < self.DELTA[metric]:
+                        self.DELTA[metric] = 0
                         return None
                     previous = self.data[metric]
-                    self.data[metric] = self.data[metric] - DELTA[metric]
-                    DELTA[metric] = previous
+                    self.data[metric] = self.data[metric] - self.DELTA[metric]
+                    self.DELTA[metric] = previous
                 else:
-                    DELTA[metric] = self.data[metric]
+                    self.DELTA[metric] = self.data[metric]
 
         try:
             # get new data
@@ -148,6 +144,9 @@ class Service(SimpleService):
         except (ValueError, AttributeError):
             self.error('error in _get_data()')
             return None
+        for key in self.data.keys():
+            show = str(key) + ': ' + str(self.data[key])
+            self.error(show)
         return self.data
 
     # if false -- exit
@@ -187,6 +186,7 @@ class Service(SimpleService):
                 }
             }
 
+            # TODO: does it neet to be here?
             # init replication charts
             status = self.create_replication_charts()
             return status
@@ -274,6 +274,8 @@ class Service(SimpleService):
         return updated
 
 
-# s = Service(configuration={'update_every':update_every,'retries':retries,'priority':priority},name=None)
+# s = Service(configuration={'update_every':update_every,'retries':retries,'priority':priority,'db':'edge_db'},name=None)
 # s.check()
+# s.create()
+# s.update(1)
 # s.run()
