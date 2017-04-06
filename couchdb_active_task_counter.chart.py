@@ -7,6 +7,7 @@
 
 from base import SimpleService
 import json
+import base64
 
 try:
     import urllib.request as urllib2
@@ -69,6 +70,15 @@ class Service(SimpleService):
         self.couch_active_task_url = self.couch_url + '_active_tasks'
         self.couch_all_dbs_url = self.couch_url + '_all_dbs'
 
+        # AUTH
+        try:
+            self.couch_username = configuration['couch_username']
+            self.couch_password = configuration['couch_password']
+        except:
+            self.couch_username = ''
+            self.couch_password = ''
+        self.base64string = base64.encodestring('%s:%s' % (self.couch_username, self.couch_password)).replace('\n', '')
+
         self.refresh()
 
         self.new_chart_vars = []
@@ -84,13 +94,16 @@ class Service(SimpleService):
     def refresh(self):
         """ get fresh data """
         # open active tasks urls
-        active_tasks_url = urllib2.urlopen(self.couch_active_task_url).read()
-        # active_tasks_url = open('active_task.phalanx.json').read()
+        request = urllib2.Request(self.couch_active_task_url)
+        request.add_header("Authorization", "Basic %s" % self.base64string)
+        active_tasks_url = urllib2.urlopen(request).read()
         self.active_tasks = json.loads(active_tasks_url)
-        #  open dbs urls
-        all_dbs_url = urllib2.urlopen(self.couch_all_dbs_url).read()
-        self.all_dbs = json.loads(all_dbs_url)
 
+        #  open dbs urls
+        request = urllib2.Request(self.couch_all_dbs_url)
+        request.add_header("Authorization", "Basic %s" % self.base64string)
+        all_dbs_url = urllib2.urlopen(request).read()
+        self.all_dbs = json.loads(all_dbs_url)
 
     def _get_data(self):
         def fix_database_name(database_name):

@@ -7,9 +7,11 @@
 # specify 'db_name' in conf.file
 #
 # more info: github.com/shellshock1953/share
+from dumbdbm import _Database
 
 from base import SimpleService
 import json
+import base64
 
 try:
     import urllib.request as urllib2
@@ -38,6 +40,17 @@ class Service(SimpleService):
         SimpleService.__init__(self, configuration=configuration, name=name)
         self.tasks_to_monitor = ['indexer', 'database_compaction', 'view_compaction', 'replication']
         self.couch_url = configuration['couch_url']
+
+        # auth
+        try:
+            self.couch_username = configuration['couch_username']
+            self.couch_password = configuration['couch_password']
+        except:
+            self.couch_username = ''
+            self.couch_password = ''
+
+        self.base64string = base64.encodestring('%s:%s' % (self.couch_username, self.couch_password)).replace('\n', '')
+
         # self.couch_url = 'http://127.0.0.1:5984/'
         self.couch_active_task_url = self.couch_url + '_active_tasks'
         if len(self.couch_url) is 0: raise Exception('Invalid couch url')
@@ -57,11 +70,15 @@ class Service(SimpleService):
     # get fresh data
     def refresh(self):
         # open active tasks urls
-        active_tasks_url = urllib2.urlopen(self.couch_active_task_url).read()
+        request = urllib2.Request(self.couch_active_task_url)
+        request.add_header("Authorization", "Basic %s" % self.base64string)
+        active_tasks_url = urllib2.urlopen(request).read()
         self.active_tasks = json.loads(active_tasks_url)
         try:
             # open monitoring database
-            database_open = urllib2.urlopen(self.couch_db_url).read()
+            request = urllib2.Request(self.couch_db_url)
+            request.add_header("Authorization", "Basic %s" % self.base64string)
+            database_open = urllib2.urlopen(request).read()
             self.database_stats = json.loads(database_open)
         except urllib2.HTTPError:
             self.error('Cant open database. Check conf to correct db-name')
