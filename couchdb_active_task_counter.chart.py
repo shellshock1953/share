@@ -5,6 +5,7 @@
 # more info: github.com/shellshock1953/share
 
 
+# from python_modules.base import SimpleService
 from base import SimpleService
 import json
 import base64
@@ -75,6 +76,7 @@ class Service(SimpleService):
             self.couch_username = configuration['couch_username']
             self.couch_password = configuration['couch_password']
         except:
+            # no username specified in conf file.
             self.couch_username = ''
             self.couch_password = ''
         self.base64string = base64.encodestring('%s:%s' % (self.couch_username, self.couch_password)).replace('\n', '')
@@ -94,16 +96,26 @@ class Service(SimpleService):
     def refresh(self):
         """ get fresh data """
         # open active tasks urls
-        request = urllib2.Request(self.couch_active_task_url)
-        request.add_header("Authorization", "Basic %s" % self.base64string)
-        active_tasks_url = urllib2.urlopen(request).read()
-        self.active_tasks = json.loads(active_tasks_url)
+        try:
+            active_tasks_url = urllib2.urlopen(self.couch_active_task_url).read()
+            self.active_tasks = json.loads(active_tasks_url)
+        except:
+            # server is pass protected
+            request = urllib2.Request(self.couch_active_task_url)
+            request.add_header("Authorization", "Basic %s" % self.base64string)
+            active_tasks_url = urllib2.urlopen(request).read()
+            self.active_tasks = json.loads(active_tasks_url)
 
         #  open dbs urls
-        request = urllib2.Request(self.couch_all_dbs_url)
-        request.add_header("Authorization", "Basic %s" % self.base64string)
-        all_dbs_url = urllib2.urlopen(request).read()
-        self.all_dbs = json.loads(all_dbs_url)
+        try:
+            all_dbs_url = urllib2.urlopen(self.couch_all_dbs_url).read()
+            self.all_dbs = json.loads(all_dbs_url)
+        except:
+            # server is pass protected
+            request = urllib2.Request(self.couch_all_dbs_url)
+            request.add_header("Authorization", "Basic %s" % self.base64string)
+            all_dbs_url = urllib2.urlopen(request).read()
+            self.all_dbs = json.loads(all_dbs_url)
 
     def _get_data(self):
         def fix_database_name(database_name):
@@ -224,3 +236,9 @@ class Service(SimpleService):
         # TODO: dont user create()
         # instead use self.dimension(*line)
         self.create()
+
+# s = Service(configuration={'priority':50000,'update_every':2,'retries':12})
+# s.check()
+# s.create()
+# s.update(1)
+# s.run()

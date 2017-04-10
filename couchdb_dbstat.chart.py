@@ -7,7 +7,6 @@
 # specify 'db_name' in conf.file
 #
 # more info: github.com/shellshock1953/share
-from dumbdbm import _Database
 
 from base import SimpleService
 import json
@@ -69,23 +68,25 @@ class Service(SimpleService):
 
     # get fresh data
     def refresh(self):
-        # open active tasks urls
-        request = urllib2.Request(self.couch_active_task_url)
-        request.add_header("Authorization", "Basic %s" % self.base64string)
-        active_tasks_url = urllib2.urlopen(request).read()
-        self.active_tasks = json.loads(active_tasks_url)
+        try:
+            # open active tasks urls
+            request = urllib2.Request(self.couch_active_task_url)
+            request.add_header("Authorization", "Basic %s" % self.base64string)
+            active_tasks_url = urllib2.urlopen(request).read()
+            self.active_tasks = json.loads(active_tasks_url)
+        except:
+            active_tasks_url = urllib2.urlopen(self.couch_active_task_url).read()
+            self.active_tasks = json.loads(active_tasks_url)
         try:
             # open monitoring database
             request = urllib2.Request(self.couch_db_url)
             request.add_header("Authorization", "Basic %s" % self.base64string)
             database_open = urllib2.urlopen(request).read()
             self.database_stats = json.loads(database_open)
-        except urllib2.HTTPError:
-            self.error('Cant open database. Check conf to correct db-name')
+        except:
+            database_open = urllib2.urlopen(self.couch_db_url).read()
+            self.database_stats = json.loads(database_open)
             # zero data
-            for key in self.data.keys():
-                self.data[key] = 0
-            return False
 
     def _get_data(self):
 
