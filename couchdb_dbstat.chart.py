@@ -38,7 +38,6 @@ class Service(SimpleService):
     def __init__(self, configuration=None, name=None):
         SimpleService.__init__(self, configuration=configuration, name=name)
         self.tasks_to_monitor = ['indexer', 'database_compaction', 'view_compaction', 'replication']
-        self.couch_url = configuration['couch_url']
 
         # auth
         try:
@@ -50,6 +49,7 @@ class Service(SimpleService):
 
         self.base64string = base64.encodestring('%s:%s' % (self.couch_username, self.couch_password)).replace('\n', '')
 
+        self.couch_url = configuration['couch_url']
         # self.couch_url = 'http://127.0.0.1:5984/'
         self.couch_active_task_url = self.couch_url + '_active_tasks'
         if len(self.couch_url) is 0: raise Exception('Invalid couch url')

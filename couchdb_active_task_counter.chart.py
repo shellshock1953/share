@@ -6,7 +6,11 @@
 
 
 # from python_modules.base import SimpleService
+#from base import SimpleService
+# import sys
+# sys.path.append('/data/shellshock/install/netdata/python.d/python_modules/')
 from base import SimpleService
+
 import json
 import base64
 
@@ -65,7 +69,7 @@ class Service(SimpleService):
 
         self.tasks_to_monitor = ['indexer', 'database_compaction', 'view_compaction', 'replication']
         # self.couch_url = configuration['couch_url']
-        self.couch_url = 'http://127.0.0.1:5984/'
+        self.couch_url = 'http://10.0.0.50:5984/'
         if len(self.couch_url) is 0: raise Exception('Invalid couch url')
 
         self.couch_active_task_url = self.couch_url + '_active_tasks'
@@ -129,6 +133,21 @@ class Service(SimpleService):
             else:
                 return database_name
 
+        def get_source_hostname(database_name):
+            if 'http' in database_name:
+                # http://chronograph:*****@localhost:5984/openprocurement_chronograph/
+                source_hostname = database_name.split('/')[2]
+                if '@' in source_hostname:
+                    # chronograph:*****@localhost:5984/
+                    source_hostname = source_hostname.split('@')[1]
+                # localhost:5984/
+                source_hostname = source_hostname.split(':')[0]
+                return source_hostname
+            elif 'localhost' in database_name:
+                return 'localhost'
+            else:
+                return 'localhost'
+
         def new_data_item(task_type, chart_var):
             if self.data.has_key(chart_var):
                 pass
@@ -181,8 +200,12 @@ class Service(SimpleService):
 
                         # replication
                         if task_type == 'replication':
-                            source = fix_database_name(task['source'])
-                            chart_var = task_type + "_" + source + '_' + db
+                            source_db = fix_database_name(task['source'])
+                            source_hostname = get_source_hostname(task['source'])
+                            target_db = fix_database_name(task['target'])
+                            target_hostname = get_source_hostname(task['target'])
+                            chart_var = task_type + "_" + target_hostname + '.' + target_db + "_" + \
+                                source_hostname + "." + source_db
                             new_data_item(task_type, chart_var)
                             self.data[chart_var] = progress
 
@@ -233,7 +256,7 @@ class Service(SimpleService):
                     )
                     self.new_chart_vars.remove([chart_task, chart_var])
 
-        # TODO: dont user create()
+        # TODO: dont use create()
         # instead use self.dimension(*line)
         self.create()
 
