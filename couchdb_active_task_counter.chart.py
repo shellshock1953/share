@@ -13,6 +13,7 @@ from base import SimpleService
 
 import json
 import base64
+import sys
 
 try:
     import urllib.request as urllib2
@@ -85,7 +86,11 @@ class Service(SimpleService):
             self.couch_password = ''
         self.base64string = base64.encodestring('%s:%s' % (self.couch_username, self.couch_password)).replace('\n', '')
 
-        self.refresh()
+        try:
+            self.refresh()
+        except IOError, e:
+            self.error('cant connect to couchdb. Check couchdn is running and correct auth present')
+            sys.exit(1)
 
         self.new_chart_vars = []
         self.order = ORDER
@@ -109,9 +114,6 @@ class Service(SimpleService):
             request.add_header("Authorization", "Basic %s" % self.base64string)
             active_tasks_url = urllib2.urlopen(request).read()
             self.active_tasks = json.loads(active_tasks_url)
-        else:
-            self.error('cant connect to couchdb. Wrong auth')
-            exit(1)
 
         #  open dbs urls
         try:
@@ -123,9 +125,6 @@ class Service(SimpleService):
             request.add_header("Authorization", "Basic %s" % self.base64string)
             all_dbs_url = urllib2.urlopen(request).read()
             self.all_dbs = json.loads(all_dbs_url)
-        else:
-            self.error('cant connect to couchdb. Wrong auth')
-            exit(1)
 
     def _get_data(self):
         def fix_database_name(database_name):

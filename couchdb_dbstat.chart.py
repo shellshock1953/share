@@ -11,6 +11,7 @@
 from base import SimpleService
 import json
 import base64
+import sys
 
 try:
     import urllib.request as urllib2
@@ -59,11 +60,15 @@ class Service(SimpleService):
         self.couch_db_url = self.couch_url + self.couch_db_name
 
         self.data = {}
-        self.refresh()
+        try:
+            self.refresh()
+        except IOError, e:
+            self.error('cant connect to couchdb. Check couchdn is running and correct auth present')
 
         self.new_source_replications = []
         self.order = ORDER
         self.definitions = {}
+
         # self.definitions = CHARTS
 
     # get fresh data
@@ -78,9 +83,6 @@ class Service(SimpleService):
             request.add_header("Authorization", "Basic %s" % self.base64string)
             active_tasks_url = urllib2.urlopen(request).read()
             self.active_tasks = json.loads(active_tasks_url)
-        else:
-            self.error('incorrect couchdb auth')
-            exit(1)
         try:
             # open monitoring database
             database_open = urllib2.urlopen(self.couch_db_url).read()
@@ -91,9 +93,6 @@ class Service(SimpleService):
             request.add_header("Authorization", "Basic %s" % self.base64string)
             database_open = urllib2.urlopen(request).read()
             self.database_stats = json.loads(database_open)
-        else:
-            self.error('incorrect couchdb auth')
-            exit(1)
 
     def _get_data(self):
 
