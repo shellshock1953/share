@@ -86,11 +86,13 @@ class Service(SimpleService):
             self.couch_password = ''
         self.base64string = base64.encodestring('%s:%s' % (self.couch_username, self.couch_password)).replace('\n', '')
 
+        self.error_handler = False
         try:
             self.refresh()
         except IOError, e:
             self.error('cant connect to couchdb. Check couchdn is running and correct auth present')
-            sys.exit(1)
+            self.error_handler = True
+
 
         self.new_chart_vars = []
         self.order = ORDER
@@ -127,6 +129,9 @@ class Service(SimpleService):
             self.all_dbs = json.loads(all_dbs_url)
 
     def _get_data(self):
+        if self.error_handler:
+            return None
+
         def fix_database_name(database_name):
             """ unification db name
             :arg http://ip:port/db

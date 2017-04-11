@@ -59,12 +59,13 @@ class Service(SimpleService):
         # self.couch_db_name = 'public_sandbox'
         self.couch_db_url = self.couch_url + self.couch_db_name
 
+        self.error_handler = False
         self.data = {}
         try:
             self.refresh()
         except IOError, e:
             self.error('cant connect to couchdb. Check couchdn is running and correct auth present')
-            sys.exit(1)
+            self.error_handler = True
 
         self.new_source_replications = []
         self.order = ORDER
@@ -96,6 +97,8 @@ class Service(SimpleService):
             self.database_stats = json.loads(database_open)
 
     def _get_data(self):
+        if self.error_handler:
+            return None
 
         # calc 'new - previous' values
         # result stored in DELTA{}
