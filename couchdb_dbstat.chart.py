@@ -70,23 +70,30 @@ class Service(SimpleService):
     def refresh(self):
         try:
             # open active tasks urls
+            active_tasks_url = urllib2.urlopen(self.couch_active_task_url).read()
+            self.active_tasks = json.loads(active_tasks_url)
+        except urllib2.URLError:
+            # need auth
             request = urllib2.Request(self.couch_active_task_url)
             request.add_header("Authorization", "Basic %s" % self.base64string)
             active_tasks_url = urllib2.urlopen(request).read()
             self.active_tasks = json.loads(active_tasks_url)
-        except:
-            active_tasks_url = urllib2.urlopen(self.couch_active_task_url).read()
-            self.active_tasks = json.loads(active_tasks_url)
+        else:
+            msg.error('incorrect couchdb auth')
+            exit(1)
         try:
             # open monitoring database
+            database_open = urllib2.urlopen(self.couch_db_url).read()
+            self.database_stats = json.loads(database_open)
+        except urllib2.URLError:
+            # need auth
             request = urllib2.Request(self.couch_db_url)
             request.add_header("Authorization", "Basic %s" % self.base64string)
             database_open = urllib2.urlopen(request).read()
             self.database_stats = json.loads(database_open)
-        except:
-            database_open = urllib2.urlopen(self.couch_db_url).read()
-            self.database_stats = json.loads(database_open)
-            # zero data
+        else:
+            msg.error('incorrect couchdb auth')
+            exit(1)
 
     def _get_data(self):
 

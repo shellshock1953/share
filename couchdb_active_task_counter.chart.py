@@ -68,8 +68,8 @@ class Service(SimpleService):
         SimpleService.__init__(self, configuration=configuration, name=name)
 
         self.tasks_to_monitor = ['indexer', 'database_compaction', 'view_compaction', 'replication']
-        # self.couch_url = configuration['couch_url']
-        self.couch_url = 'http://10.0.0.50:5984/'
+        self.couch_url = configuration['couch_url']
+        # self.couch_url = 'http://10.0.0.50:5984/'
         if len(self.couch_url) is 0: raise Exception('Invalid couch url')
 
         self.couch_active_task_url = self.couch_url + '_active_tasks'
