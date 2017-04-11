@@ -64,6 +64,7 @@ class Service(SimpleService):
             self.refresh()
         except IOError, e:
             self.error('cant connect to couchdb. Check couchdn is running and correct auth present')
+            sys.exit(1)
 
         self.new_source_replications = []
         self.order = ORDER
