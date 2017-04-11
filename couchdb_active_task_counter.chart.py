@@ -103,23 +103,29 @@ class Service(SimpleService):
         try:
             active_tasks_url = urllib2.urlopen(self.couch_active_task_url).read()
             self.active_tasks = json.loads(active_tasks_url)
-        except:
+        except IOError:
             # server is pass protected
             request = urllib2.Request(self.couch_active_task_url)
             request.add_header("Authorization", "Basic %s" % self.base64string)
             active_tasks_url = urllib2.urlopen(request).read()
             self.active_tasks = json.loads(active_tasks_url)
+        else:
+            self.error('cant connect to couchdb. Wrong auth')
+            exit(1)
 
         #  open dbs urls
         try:
             all_dbs_url = urllib2.urlopen(self.couch_all_dbs_url).read()
             self.all_dbs = json.loads(all_dbs_url)
-        except:
+        except IOError:
             # server is pass protected
             request = urllib2.Request(self.couch_all_dbs_url)
             request.add_header("Authorization", "Basic %s" % self.base64string)
             all_dbs_url = urllib2.urlopen(request).read()
             self.all_dbs = json.loads(all_dbs_url)
+        else:
+            self.error('cant connect to couchdb. Wrong auth')
+            exit(1)
 
     def _get_data(self):
         def fix_database_name(database_name):
