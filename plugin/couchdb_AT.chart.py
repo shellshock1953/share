@@ -32,8 +32,7 @@ CHARTS = {
     # show percentage per dbs
     'indexer_percentage': {
         'options': [None, 'Indexer task', 'percentage', 'Indexer task percentage', '', 'line'],
-        'lines':
-            ['aa', 'aa', 'absolute', 1, 1]
+        'lines': []
     },
     'database_compaction_percentage': {
         'options': [None, 'DB compaction task', 'percentage', 'DB compaction task percentage', '', 'line'],
@@ -58,8 +57,8 @@ class Service(UrlService):
         self.definitions = CHARTS
 
         self.baseurl = str(self.configuration.get('url'))
-        self.all_dbs_url = self.baseurl + '_all_dbs'
-        self.active_tasks_url = self.baseurl + '_active_tasks'
+        self.all_dbs_url = self.baseurl + '_all_dbs/'
+        self.active_tasks_url = self.baseurl + '_active_tasks/'
 
         self.untrack_dbs = self.configuration.get('untrack_dbs',['_replicator','_users'])
 
@@ -68,7 +67,7 @@ class Service(UrlService):
         if self.user:
             self.base64string = base64.encodestring('%s:%s' % (self.user, self.password)).replace('\n', '')
 
-        self.data = { 'indexer_task': 0, 'database_compaction_task': 0, 'view_compaction_task': 0, 'replication_task': 0, }
+        self.data = {'indexer_task': 0, 'database_compaction_task': 0, 'view_compaction_task': 0, 'replication_task': 0}
 
 
     def _get_all_dbs(self):
@@ -90,7 +89,7 @@ class Service(UrlService):
         return active_tasks
 
     def _get_data(self):
-        pdb.set_trace()
+        # pdb.set_trace()
         def get_host_and_db(url):
             import re
             if 'http' in url:
@@ -111,7 +110,6 @@ class Service(UrlService):
             if chart_var not in self.data:
                 self.append_new_lines(task, chart_var)
 
-        # pdb.set_trace()
         # zero values EVERY time
         for key in self.data.keys():
             self.data[key] = 0
@@ -120,7 +118,7 @@ class Service(UrlService):
         all_dbs = self._get_all_dbs()
         active_tasks = self._get_active_tasks()
         if self.ERROR:
-            self.error('halting plugin')
+            self.error('Error in getting new data. Halting plugin')
             return None
 
         # calculate running tasks
@@ -138,9 +136,11 @@ class Service(UrlService):
         return self.data
 
     def append_new_lines(self, task, chart_var):
+        # pdb.set_trace()
+        self._dimensions.append(str(chart_var))
+        self.info('adding new lines: task: %s - chart_var: %s' % (task, chart_var))
         self.definitions[task + '_percentage']['lines'].append(
             [chart_var, chart_var, 'absolute', 1, 1]
         )
-        # self._dimensions.append(str(chart_var))
         # self.create()
 
