@@ -10,6 +10,7 @@ try:
     import urllib.request as urllib2
 except ImportError:
     import urllib2
+
 ORDER = [
     'active_tasks',
     'indexer_percentage',
@@ -54,7 +55,8 @@ class Service(UrlService):
     def __init__(self, configuration=None, name=None):
         self.ERROR = False
         UrlService.__init__(self, configuration=configuration, name=name)
-        self.monitoring_tasks = ['indexer', 'database_compaction', 'view_compaction', 'replication']
+        # self.monitoring_tasks = ['indexer', 'database_compaction', 'view_compaction', 'replication']
+        self.monitoring_tasks = self.configuration.get('monitoring_tasks')
         self.order = ORDER
         self.definitions = CHARTS
 
@@ -69,7 +71,9 @@ class Service(UrlService):
         if self.user:
             self.base64string = base64.encodestring('%s:%s' % (self.user, self.password)).replace('\n', '')
 
-        self.data = {'indexer_task': 0, 'database_compaction_task': 0, 'view_compaction_task': 0, 'replication_task': 0}
+        self.data = {}
+        for task in self.monitoring_tasks:
+            self.data[task + '_task'] = 0
 
     # def _get_all_dbs(self):
     #     self.url = self.all_dbs_url
