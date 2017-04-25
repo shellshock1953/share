@@ -5,6 +5,7 @@ from base import UrlService
 import pdb
 import base64
 import json
+
 try:
     import urllib.request as urllib2
 except ImportError:
@@ -48,6 +49,7 @@ CHARTS = {
     }
 }
 
+
 class Service(UrlService):
     def __init__(self, configuration=None, name=None):
         self.ERROR = False
@@ -57,10 +59,10 @@ class Service(UrlService):
         self.definitions = CHARTS
 
         self.baseurl = str(self.configuration.get('url'))
-        self.all_dbs_url = self.baseurl + '_all_dbs/'
-        self.active_tasks_url = self.baseurl + '_active_tasks/'
+        # self.all_dbs_url = str(self.baseurl + '_all_dbs/')
+        self.active_tasks_url = str(self.baseurl + '_active_tasks/')
 
-        self.untrack_dbs = self.configuration.get('untrack_dbs',['_replicator','_users'])
+        self.untrack_dbs = self.configuration.get('untrack_dbs', ['_replicator', '_users'])
 
         self.user = self.configuration.get('user') or None
         self.password = self.configuration.get('pass') or None
@@ -69,13 +71,14 @@ class Service(UrlService):
 
         self.data = {'indexer_task': 0, 'database_compaction_task': 0, 'view_compaction_task': 0, 'replication_task': 0}
 
-
-    def _get_all_dbs(self):
-        self.url = self.all_dbs_url
-        all_dbs = self._get_raw_data()
-        return all_dbs
+    # def _get_all_dbs(self):
+    #     self.url = self.all_dbs_url
+    #     all_dbs = self._get_raw_data()
+    #     return all_dbs
 
     def _get_active_tasks(self):
+        # pdb.set_trace()
+        self.ERROR = False
         self.url = self.active_tasks_url
         try:
             request = urllib2.Request(self.url)
@@ -89,7 +92,6 @@ class Service(UrlService):
         return active_tasks
 
     def _get_data(self):
-        # pdb.set_trace()
         def get_host_and_db(url):
             import re
             if 'http' in url:
@@ -107,7 +109,7 @@ class Service(UrlService):
             return source, db
 
         def check_new_data(task, chart_var):
-            if chart_var not in self.data:
+            if chart_var not in self._dimensions:
                 self.append_new_lines(task, chart_var)
 
         # zero values EVERY time
@@ -115,24 +117,40 @@ class Service(UrlService):
             self.data[key] = 0
 
         # refresh
-        all_dbs = self._get_all_dbs()
+        # all_dbs = self._get_all_dbs()
         active_tasks = self._get_active_tasks()
         if self.ERROR:
             self.error('Error in getting new data. Halting plugin')
             return None
 
-        # calculate running tasks
         for active_task in active_tasks:
-            for monitoring_task in self.monitoring_tasks:
-                if monitoring_task == active_task['type']:
-                    self.data[monitoring_task + '_task'] += 1
-                    # pdb.set_trace()
-                    if monitoring_task == 'replication':
-                        source_host,source_db = get_host_and_db(active_task['source'])
-                        target_host,target_db = get_host_and_db(active_task['target'])
-                        chart_var = 'replication' + '_' + source_host+"."+ source_db + '_' + target_host+'.'+ target_db
-                        check_new_data('replication', chart_var)
-                        self.data[chart_var] = active_task['progress']
+            if active_task['type'] in self.monitoring_tasks:
+                task_name = active_task['type']
+
+                # calculate running tasks
+                self.data[task_name + '_task'] += 1
+
+                # Percentage:
+                # indexer & view_compaction
+                if task_name == 'indexer' or task_name == 'view_compaction':
+                    design_document = active_task['design_document'].replace('/', '_')
+                    chart_var = task_name + "_" + active_task['database'] + design_document
+                    check_new_data(task_name, chart_var)
+                    self.data[chart_var] = active_task['progress']
+
+                # database_compaction
+                if task_name == 'database_compaction':
+                    chart_var = task_name + "_" + active_task['database']
+                    check_new_data(task_name, chart_var)
+                    self.data[chart_var] = active_task['progress']
+
+                # replication
+                if task_name == 'replication':
+                    source_host, source_db = get_host_and_db(active_task['source'])
+                    target_host, target_db = get_host_and_db(active_task['target'])
+                    chart_var = task_name + '_' + source_host + "." + source_db + '_' + target_host + '.' + target_db
+                    check_new_data(task_name, chart_var)
+                    self.data[chart_var] = active_task['progress']
         return self.data
 
     def append_new_lines(self, task, chart_var):
@@ -142,5 +160,6 @@ class Service(UrlService):
         self.definitions[task + '_percentage']['lines'].append(
             [chart_var, chart_var, 'absolute', 1, 1]
         )
-        # self.create()
-
+        # cant find other solutions
+        self.check() # if not: wrong dimension id: replication_localhost.first_localhost.second Available dimensions are: indexer_task
+        self.create() # if not: Cannot find dimension with id 'replication_localhost.first_localhost.second'
