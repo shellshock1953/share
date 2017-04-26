@@ -71,6 +71,7 @@ class Service(UrlService):
         if self.user:
             self.base64string = base64.encodestring('%s:%s' % (self.user, self.password)).replace('\n', '')
 
+        # self.data = {'indexer_task': 0, 'database_compaction_task': 0, 'view_compaction_task': 0, 'replication_task': 0}
         self.data = {}
         for task in self.monitoring_tasks:
             self.data[task + '_task'] = 0
