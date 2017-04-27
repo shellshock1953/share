@@ -7,45 +7,67 @@
 **Plugin would not run without .conf file.**
 
 ---
-#### couchdb_stats.chart.py
+#### CouchDB_server_stats.chart.py
 Collect the most useful server info, like requests methods, code statuses, I/O, etc.
-##### couchdb_stats.conf
+##### CouchDB_server_stats.conf
 ```
-{{ graph_name }}:
- couch_url: 'http://{{ ip:port }}/'
+{{ server_name }}:
+ url: '{{ ip:port }}'
+ priority: 70010
+ retries: 60
+ update_every: 1
 ```
-* **{{ graph_name }}** header name of Netdata graph with no spaces(common db_name).
+* **{{ server_name }}** header name of Netdata graph with no spaces(common db_name or server_name).
 * **{{ ip:port }}** CouchDB IP and port (0.0.0.0:5984)
 
 ---
-#### couchdb_active_task_counter.chart.py
-Show 5 graph: 1st represents count of all running tasks, other -- databases per task.
-**Databases with names starting with '_' are passing.**
-##### couchdb_active_task_counter.conf
+#### CouchDB_active_task_counter.chart.py
+1st graph represents count of all running tasks, other -- percentage per task.
+##### CouchDB_active_task_counter.conf
 ```
-{{ graph_name }}:
- couch_url: 'http://{{ ip:port }}/'
+{{ server_name }}:
+ url: '{{ ip:port }}'
+ priority: 70020
+ retries: 60
+ update_every: 2
+
+ monitoring_tasks:
+ - indexer
+ - database_compaction
+ - view_compaction
+ - replication
+
+ user: '{{ user }}'
+ pass: '{{ pass }}'
 ```
-* **{{ graph_name }}** header name of Netdata graph with no spaces(common db_name).
-* **{{ ip:port }}** CouchDB IP and port (0.0.0.0:5984)
+* **{{ user / pass }}** CouchDB auth credentials
 
 ---
-#### couchdb_dbstat.chart.py
-Show database info, and (if any) replication info, where selected base is a target (can be changed in near future). You can specify as many dbs you need (check conf)
-##### couchdb_dbstat.conf
+#### CouchDB_dbstat.chart.py
+Show database info, and (if any) replication task available with those db, will show pull/push replication graph.
+##### CouchDB_dbstat.conf
 ```
-{{ first_db_name }}:
- couch_url: 'http://{{ ip:port }}/'
- db: '{{ database_name }}'
+{{ server_name }}:
+ url: '{{ ip:port }}'
+ priority: 70030
+ retries: 60
+ update_every: 2
 
-{{ second_db_name }}:
- couch_url: 'http://{{ ip:port }}/'
- db: '{{ database_name }}'
+ monitoring_dbs:
+ - {{ firs_db }}
+ - {{ second_db }}
+ - third
+
+ monitoring_tasks:
+ - indexer
+ - database_compaction
+ - view_compaction
+ - replication
+
+ user: '{{ user }}'
+ pass: '{{ pass }}'
 ```
-* **{{ first_db_name }}** first db to be monitored
-* **{{ second_db_name }}** second db to be monitored
-* **{{ ip:port }}** CouchDB IP and port (0.0.0.0:5984)
-* **{{ database_name }}** database name used to be monitored
+* **{{ firs_db / second_db }}** libs of databases to be monitored
 
 ---
 ### Installation:

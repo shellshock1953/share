@@ -120,7 +120,7 @@ class Service(SimpleService):
     def __init__(self, configuration=None, name=None):
         SimpleService.__init__(self, configuration=configuration, name=name)
 
-        self.couch_url = configuration['couch_url']
+        self.couch_url = configuration['url']
         # self.couch_url = 'http://127.0.0.1:5984/'
         self.couch_stats_url = self.couch_url + '_stats'
         if len(self.couch_stats_url) == 0: raise Exception('Invalid couch')
