@@ -68,7 +68,7 @@ class Service(UrlService):
             active_tasks_url = urllib2.urlopen(request).read()
             active_tasks = json.loads(active_tasks_url)
         except IOError:
-            self.error('Cant connect to couchdb. Check db is running and auth data is correct')
+            self.error('Cant connect to CouchDB. Check db is running and auth data is correct')
             self.ERROR = True
         return active_tasks
 
@@ -96,25 +96,30 @@ class Service(UrlService):
             if 'http' in url:
                 if '@' in url:
                     # http://chronograph:*****@localhost:5984/openprocurement_chronograph/
-                    source = re.split('/|:|@', url)[5]
-                    db = re.split('/|:|@', url)[7]
+                    source = re.split('[/:@]', url)[5]
+                    db = re.split('[/:@]', url)[7]
                 else:
                     # http://localhost:5984/openprocurement_chronograph/
-                    source = re.split('/|:|@', url)[3]
-                    db = re.split('/|:|@', url)[5]
+                    source = re.split('[/:@]', url)[3]
+                    db = re.split('[/:@]', url)[5]
             else:
                 source = 'localhost'
                 db = url
-            return source
+            return source, db
 
-        def check_new_data(db_name, chart_var):
+        def check_new_data(db_name, chart_var, chart_name):
             if chart_var not in self._dimensions:
-                self.append_new_lines(db_name, chart_var)
+                self.append_new_lines(db_name, chart_var, chart_name)
 
         try:
             # zero values EVERY time
             for key in self.data.keys():
-                self.data[key] = 0
+                if 'source_seq' in key or 'destionation_seq' in key:
+                    # if replication task disappear need to destroy metrics
+                    # pdb.set_trace()
+                    del self.data[key]
+                else:
+                    self.data[key] = 0
 
             # get new data
             # all_dbs = self._get_all_dbs()
@@ -150,18 +155,25 @@ class Service(UrlService):
                     if active_tasks:
                         for active_task in active_tasks:
                             if active_task['type'] == 'replication' and db_name in active_task['target']:
-                                source = get_host_and_db(active_task['source'])
-                                # target = get_host_and_db(active_task['target'])
+                                source_host, source_db = get_host_and_db(active_task['source'])
+                                destionation_host, destionation_db = get_host_and_db(active_task['target'])
 
                                 source_seq = active_task['source_seq']
-                                local_seq = active_task['checkpointed_source_seq']
-                                source_seq_name = db_name + '_' + source + '_source_seq'
-                                local_seq_name = db_name + '_' + source + '_local_seq'
+                                destionation_seq = active_task['checkpointed_source_seq']
+                                # var name
+                                source_seq_name = db_name + '_' + source_host + '.' + source_db + '_source_seq'
+                                destionation_seq_name = db_name + '_' + destionation_host + '.' + destionation_db + '_destionation_seq'
+                                # chart name
+                                source_chart_name = 'src ' + source_host + '.' + source_db
+                                destionation_chart_name = 'dst ' + destionation_host + '.' + destionation_db
+                                # self.data
                                 self.data[source_seq_name] = source_seq
-                                self.data[local_seq_name] = local_seq
-                                calc_delta(source_seq_name, local_seq_name)
-                                check_new_data(db_name, source_seq_name)
-                                check_new_data(db_name, local_seq_name)
+                                self.data[destionation_seq_name] = destionation_seq
+                                calc_delta(source_seq_name, destionation_seq_name)
+                                # check for a new data
+                                check_new_data(db_name, source_seq_name, source_chart_name)
+                                check_new_data(db_name, destionation_seq_name, destionation_chart_name)
+                                # pdb.set_trace()
 
         except (ValueError, AttributeError):
             self.error('error in _get_data()')
@@ -169,58 +181,61 @@ class Service(UrlService):
         return self.data
 
     def check(self):
-        # TODO: reformat check()
+        # TODO: reformat check() to get all possible errors and if any halt plugin
         # no need to refresh() -- first start
         # dynamic creation in check() because of few databases
         for db_name in self.monitoring_dbs:
-            self.definitions[db_name + '_database_documents_delta'] = {'options': [], 'lines': []}
-            self.definitions[db_name + '_database_documents_delta']['options'] = [None, 'Documents', 'documents',
-                                                                                  'Documents delta', '', 'line']
-            self.definitions[db_name + '_database_documents_delta']['lines'].append(
-                [db_name + '_docs_delta', 'docs', 'absolute', 1, 1])
-            self.definitions[db_name + '_database_documents_delta']['lines'].append(
-                [db_name + '_docs_deleted_delta', 'docs_deleted', 'absolute', 1, 1])
-
-            self.definitions[db_name + '_database_documents'] = {'options': [], 'lines': []}
-            self.definitions[db_name + '_database_documents']['options'] = [None, 'Documents', 'documents', 'Documents',
-                                                                            '', 'line']
-            self.definitions[db_name + '_database_documents']['lines'].append(
-                [db_name + '_docs', 'docs', 'absolute', 1, 1])
-            self.definitions[db_name + '_database_documents']['lines'].append(
-                [db_name + '_docs_deleted', 'docs_deleted', 'absolute', 1, 1])
-
-            self.definitions[db_name + '_database_fragmentation'] = {'options': [], 'lines': []}
-            self.definitions[db_name + '_database_fragmentation']['options'] = [None, 'Database fragmentation',
-                                                                                'Megabytes', 'Database fragmentation',
-                                                                                '', 'line']
-            self.definitions[db_name + '_database_fragmentation']['lines'].append(
-                [db_name + '_disk_size_overhead', 'disk size overhead', 'absolute', 1, 1])
-            self.definitions[db_name + '_database_fragmentation']['lines'].append(
-                [db_name + '_data_size', 'data size', 'absolute', 1, 1])
-
-            self.definitions[db_name + '_database_seq'] = {'options': [], 'lines': []}
-            self.definitions[db_name + '_database_seq']['options'] = [None, 'Database seq', 'seq', 'Database seq', '',
-                                                                      'line']
-            self.definitions[db_name + '_database_seq']['lines'].append(
-                [db_name + '_db_seq', 'db seq', 'absolute', 1, 1])
-
-
             self.order.append(db_name + '_database_documents_delta')
             self.order.append(db_name + '_database_documents')
             self.order.append(db_name + '_database_fragmentation')
             self.order.append(db_name + '_database_seq')
+
+            self.definitions[db_name + '_database_documents_delta'] = {'options': [], 'lines': []}
+            self.definitions[db_name + '_database_documents_delta'] \
+                ['options'] = [None, 'Documents', 'documents', 'Documents delta', '', 'line']
+            self.definitions[db_name + '_database_documents_delta'] \
+                ['lines'].append([db_name + '_docs_delta', 'docs', 'absolute', 1, 1])
+            self.definitions[db_name + '_database_documents_delta'] \
+                ['lines'].append([db_name + '_docs_deleted_delta', 'docs_deleted', 'absolute', 1, 1])
+
+            self.definitions[db_name + '_database_documents'] = {'options': [], 'lines': []}
+            self.definitions[db_name + '_database_documents'] \
+                ['options'] = [None, 'Documents', 'documents', 'Documents', '', 'line']
+            self.definitions[db_name + '_database_documents'] \
+                ['lines'].append([db_name + '_docs', 'docs', 'absolute', 1, 1])
+            self.definitions[db_name + '_database_documents'] \
+                ['lines'].append([db_name + '_docs_deleted', 'docs_deleted', 'absolute', 1, 1])
+
+            self.definitions[db_name + '_database_fragmentation'] = {'options': [], 'lines': []}
+            self.definitions[db_name + '_database_fragmentation'] \
+                ['options'] = [None, 'Database fragmentation', 'Megabytes', 'Database fragmentation', '', 'line']
+            self.definitions[db_name + '_database_fragmentation'] \
+                ['lines'].append([db_name + '_disk_size_overhead', 'disk size overhead', 'absolute', 1, 1])
+            self.definitions[db_name + '_database_fragmentation'] \
+                ['lines'].append([db_name + '_data_size', 'data size', 'absolute', 1, 1])
+
+            self.definitions[db_name + '_database_seq'] = {'options': [], 'lines': []}
+            self.definitions[db_name + '_database_seq'] \
+                ['options'] = [None, 'Database seq', 'seq', 'Database seq', '', 'line']
+            self.definitions[db_name + '_database_seq'] \
+                ['lines'].append([db_name + '_db_seq', 'db seq', 'absolute', 1, 1])
         return True
 
-    def append_new_lines(self, db_name, chart_var):
-        self.definitions[db_name + '_replication_seq'] = {'options': [], 'lines': []}
-        self.definitions[db_name + '_replication_seq']['options'] = [None, 'Replications', 'seq', 'Replication seq',
-                                                                     '', 'line']
-        self.order.append(db_name + '_replication_seq')
-
-        self._dimensions.append(str(chart_var))
+    def append_new_lines(self, db_name, chart_var, chart_name):
         self.info('adding new lines of replication task: db_name: %s - chart_var: %s' % (db_name, chart_var))
+        self._dimensions.append(str(chart_var))
+
+        if db_name + '_replication_seq' not in self.order:
+            # meens firts time chart created
+            self.order.append(db_name + '_replication_seq')
+            self.definitions[db_name + '_replication_seq'] = {'options': [], 'lines': []}
+            self.definitions[db_name + '_replication_seq'] \
+                ['options'] = [None, 'Replications', 'seq', 'Replication seq', '', 'line']
+
+        # can be added even if chart was created previous
+        # must to add lines only
         self.definitions[db_name + '_replication_seq']['lines'].append(
-            [chart_var, chart_var, 'absolute', 1, 1]
+            [chart_var, chart_name, 'absolute', 1, 1]
         )
         # cant find other solutions
         self.check()  # if not: wrong dimension id: replication_localhost.first_localhost.second Available dimensions are: indexer_task
