@@ -210,11 +210,11 @@ class Service(UrlService):
     def check(self):
         # check CouchDB connection
         # if no -- set self.ERROR to True
-        # self._get_active_tasks()
-        # self.debug('active tasks checked')
-        # for db_name in self.monitoring_dbs:
-        #     self._get_db_stat(db_name)
-        #     self.debug('database %s checked' % db_name)
+        self._get_active_tasks()
+        self.debug('active tasks checked')
+        for db_name in self.monitoring_dbs:
+            self._get_db_stat(db_name)
+            self.debug('database %s checked' % db_name)
 
         if self.ERROR:
             return False
