@@ -56,7 +56,6 @@ Show database info, and (if any) replication task available with those db, will 
  monitoring_dbs:
  - {{ firs_db }}
  - {{ second_db }}
- - third
 
  monitoring_tasks:
  - indexer
