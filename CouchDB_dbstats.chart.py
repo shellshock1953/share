@@ -1,5 +1,6 @@
+# import sys
+# sys.path.append('/data/shellshock/install/netdata/python.d/python_modules/')
 from base import UrlService
-import pdb
 import base64
 import json
 
@@ -21,18 +22,21 @@ class Service(UrlService):
         self.definitions = {}
 
         # config parsing
-        self.monitoring_tasks = self.configuration.get('monitoring_tasks')
         self.monitoring_dbs = self.configuration.get('monitoring_dbs')
+        # self.monitoring_dbs = ['one']
         self.untrack_dbs = self.configuration.get('untrack_dbs', ['_replicator', '_users'])
 
         # urls
         self.baseurl = str(self.configuration.get('url'))
+        # self.baseurl = 'http://10.0.0.10:5984/'
         self.active_tasks_url = str(self.baseurl + '_active_tasks/')
         self.all_dbs_url = str(self.baseurl + '_all_dbs/')
 
         # auth
-        self.user = self.configuration.get('user') or None
-        self.password = self.configuration.get('pass') or None
+        self.user = self.configuration.get('couch_username') or None
+        # self.user = 'admin'
+        self.password = self.configuration.get('couch_password') or None
+        # self.password = 'admin'
         if self.user:
             self.base64string = base64.encodestring('%s:%s' % (self.user, self.password)).replace('\n', '')
 
@@ -51,9 +55,10 @@ class Service(UrlService):
                 request.add_header("Authorization", "Basic %s" % self.base64string)
             db_stat_url = urllib2.urlopen(request).read()
             db_stat = json.loads(db_stat_url)
-        except IOError:
+        except IOError as e:
+            self.error(repr(e))
             self.error('Cant connect to %s. Check db is running and auth data is correct' % db_name)
-            self.ERROR = True
+            db_stat = None
         return db_stat
 
     def _get_active_tasks(self):
@@ -64,8 +69,10 @@ class Service(UrlService):
                 request.add_header("Authorization", "Basic %s" % self.base64string)
             active_tasks_url = urllib2.urlopen(request).read()
             active_tasks = json.loads(active_tasks_url)
-        except IOError:
-            self.error('Cant connect to CouchDB. Check db is running and auth data is correct')
+        except IOError as e:
+            self.error(repr(e))
+            self.error('Cant connect to CouchDB. Check service is running and auth data is correct')
+            active_tasks = None
             self.ERROR = True
         return active_tasks
 
@@ -74,17 +81,14 @@ class Service(UrlService):
             # calc 'new - previous' values
             # result stored in DELTA{}
             for metric in args:
-                if self.data[metric] is None: self.data[metric] = 0
-                if metric in DELTA:
-                    # prevent negative values
-                    if self.data[metric] < DELTA[metric]:
-                        DELTA[metric] = 0
-                        return None
-                    previous = self.data[metric]
-                    self.data[metric] = self.data[metric] - DELTA[metric]
-                    DELTA[metric] = previous
-                else:
+                if self.data[metric] is None:
+                    self.data[metric] = 0
+                if metric not in DELTA:  # if no such metric in DELTA (first run) -- store it!
                     DELTA[metric] = self.data[metric]
+                current = self.data[metric]  # save current untouched value
+                difference = self.data[metric] - DELTA[metric]  # current - previous
+                self.data[metric] = difference  # prevent negative values (example -- doc deleting)
+                DELTA[metric] = current  # save current for future use
 
         def get_host_and_db(url):
             import re
@@ -102,9 +106,9 @@ class Service(UrlService):
                 db = url
             return source, db
 
-        def check_new_data(db_name, chart_var, chart_name, repl_type):
+        def new_data(chart_var):
             if chart_var not in self._dimensions:
-                self.append_new_lines(db_name, chart_var, chart_name, repl_type)
+                return True
 
         try:
             # zero values EVERY time
@@ -121,6 +125,9 @@ class Service(UrlService):
             active_tasks = self._get_active_tasks()
             for db_name in self.monitoring_dbs:
                 db_stats = self._get_db_stat(db_name)
+                if db_stats is None:
+                    self.error('Cant connect to %s.' % db_name)
+                    continue
                 # pdb.set_trace()
 
                 # error handler
@@ -136,11 +143,13 @@ class Service(UrlService):
                 # DB delta documents
                 self.data[db_name + '_docs_delta'] = db_stats['doc_count']
                 self.data[db_name + '_docs_deleted_delta'] = db_stats['doc_del_count']
-                calc_delta(db_name + '_docs_delta',
-                           db_name + '_docs_deleted_delta')
+                calc_delta(db_name + '_docs_delta', db_name + '_docs_deleted_delta')
                 # update_seq
-                self.data[db_name + '_db_seq'] = db_stats['committed_update_seq']
-                calc_delta(db_name + '_db_seq')
+                self.data[db_name + '_committed_db_seq'] = db_stats['committed_update_seq']
+                self.data[db_name + '_update_db_seq'] = db_stats['update_seq']
+                self.data[db_name + '_committed_db_seq_delta'] = db_stats['committed_update_seq']
+                self.data[db_name + '_update_db_seq_delta'] = db_stats['update_seq']
+                calc_delta(db_name + '_committed_db_seq_delta',db_name + '_update_db_seq_delta')
 
                 """ Get db stats from /_active_task """
                 if active_tasks:
@@ -148,56 +157,36 @@ class Service(UrlService):
                         if active_task['type'] == 'replication': # and db_name in active_task['target']:
                             # get normal db and host names
                             source_host, source_db = get_host_and_db(active_task['source'])
-                            destionation_host, destionation_db = get_host_and_db(active_task['target'])
+                            destination_host, destination_db = get_host_and_db(active_task['target'])
 
-                            if db_name in active_task['target']:
-                                """ PULL replication """
-                                # get values
-                                source_seq = active_task['source_seq']
-                                destionation_seq = active_task['checkpointed_source_seq']
-                                # var name
-                                source_seq_name = db_name + '_' + source_host + '.' + source_db + '_pull_source_seq'
-                                destionation_seq_name = db_name + \
-                                                        '_' + destionation_host + '.' + destionation_db + \
-                                                        '_' + source_host + '.' + source_db + '_pull_destionation_seq'
-                                # chart name
-                                source_chart_name = 'src ' + source_host + '.' + source_db + \
-                                                    '_to_' + destionation_host + '.' + destionation_db
-                                destionation_chart_name = 'dst ' + destionation_host + '.' + destionation_db + \
-                                                        '_from_' + source_host + '.' + source_db
-                                # send values into self.data
-                                self.data[source_seq_name] = source_seq
-                                self.data[destionation_seq_name] = destionation_seq
-                                calc_delta(source_seq_name, destionation_seq_name)
-                                # check for a new data
-                                # if any -- we need to create new charts or add into chart new lines
-                                check_new_data(db_name, source_seq_name, source_chart_name, 'pull')
-                                check_new_data(db_name, destionation_seq_name, destionation_chart_name, 'pull')
-
-                            elif db_name in active_task['source']:
-                                """ PUSH replication """
-                                # get values
-                                source_seq = active_task['source_seq']
-                                destionation_seq = active_task['checkpointed_source_seq']
-                                # var name
-                                source_seq_name = db_name + '_' + source_host + '.' + source_db + '_push_source_seq'
-                                destionation_seq_name = db_name + \
-                                                        '_' + destionation_host + '.' + destionation_db + \
-                                                        '_' + source_host + '.' + source_db + '_push_destionation_seq'
-                                # chart name
-                                source_chart_name = 'src ' + source_host + '.' + source_db + \
-                                                    '_to_' + destionation_host + '.' + destionation_db
-                                destionation_chart_name = 'dst ' + destionation_host + '.' + destionation_db + \
-                                                          '_from_' + source_host + '.' + source_db
-                                # send values into self.data
-                                self.data[source_seq_name] = source_seq
-                                self.data[destionation_seq_name] = destionation_seq
-                                calc_delta(source_seq_name, destionation_seq_name)
-                                # check for a new data
-                                # if any -- we need to create new charts or add into chart new lines
-                                check_new_data(db_name, source_seq_name, source_chart_name, 'push')
-                                check_new_data(db_name, destionation_seq_name, destionation_chart_name, 'push')
-
+                            if db_name == destination_db:
+                                repl_type = 'pull'
+                            elif db_name == source_db:
+                                repl_type = 'push'
+                            # get values
+                            source_seq = active_task['source_seq']
+                            checkpointed_seq = active_task['checkpointed_source_seq']
+                            # var name
+                            source_seq_name = '{}:{}_{}_source_seq'.format(source_host, source_db, repl_type)
+                            source_seq_name_delta = source_seq_name + '_delta'
+                            checkpointed_seq_name = '{}:{}_{}_chekpointed_seq'.format(source_host, source_db, repl_type)
+                            checkpointed_seq_name_delta = checkpointed_seq_name + '_delta'
+                            # chart name
+                            source_chart_name = 'source_seq {}:{}'.format(source_host, source_db)
+                            checkpointed_chart_name = 'checkpointed_source_seq {}:{}'.format(source_host, source_db)
+                            # send values into self.data
+                            self.data[source_seq_name] = source_seq
+                            self.data[checkpointed_seq_name] = checkpointed_seq
+                            # delta vars
+                            self.data[source_seq_name_delta] = source_seq
+                            self.data[checkpointed_seq_name_delta] = checkpointed_seq
+                            calc_delta(source_seq_name_delta, checkpointed_seq_name_delta)
+                            # check for a new data
+                            # if any -- we need to create new charts or add into chart new lines
+                            if new_data(source_seq_name):
+                                self.append_new_lines(db_name, source_seq_name, source_chart_name, repl_type)
+                            if new_data(checkpointed_seq_name):
+                                self.append_new_lines(db_name, checkpointed_seq_name, checkpointed_chart_name, repl_type)
 
         except (ValueError, AttributeError):
             # no need to set self.ERROR to True
@@ -213,10 +202,26 @@ class Service(UrlService):
         self._get_active_tasks()
         self.debug('active tasks checked')
         for db_name in self.monitoring_dbs:
-            self._get_db_stat(db_name)
-            self.debug('database %s checked' % db_name)
+            # trying to connect to current db
+            try:
+                self.url = self.active_tasks_url
+                request = urllib2.Request(self.url)
+                if self.user:
+                    request.add_header("Authorization", "Basic %s" % self.base64string)
+                db_stat_url = urllib2.urlopen(request).read()
+                self.debug('database %s checked' % db_name)
+            except IOError as e:
+                self.error(repr(e))
+                self.error('%s removing from monitoring dbs' % db_name)
+                self.monitoring_dbs.remove(db_name)
+                continue
+
+        if len(self.monitoring_dbs) == 0:
+            self.error('No more dbs left...')
+            self.ERROR = True
 
         if self.ERROR:
+            self.error('exiting.')
             return False
         else:
             # pdb.set_trace()
@@ -227,6 +232,7 @@ class Service(UrlService):
                 self.order.append(db_name + '_database_documents_delta')
                 self.order.append(db_name + '_database_documents')
                 self.order.append(db_name + '_database_fragmentation')
+                self.order.append(db_name + '_database_seq_delta')
                 self.order.append(db_name + '_database_seq')
 
                 self.definitions[db_name + '_database_documents_delta'] = {'options': [], 'lines': []}
@@ -247,52 +253,67 @@ class Service(UrlService):
 
                 self.definitions[db_name + '_database_fragmentation'] = {'options': [], 'lines': []}
                 self.definitions[db_name + '_database_fragmentation'] \
-                    ['options'] = [None, 'Database fragmentation', 'Megabytes', 'Database ' + db_name, '', 'line']
+                    ['options'] = [None, 'Database fragmentation', 'Megabytes', 'Database ' + db_name, '', 'stacked']
                 self.definitions[db_name + '_database_fragmentation'] \
-                    ['lines'].append([db_name + '_disk_size_overhead', 'disk size overhead', 'stacked', 1, 1])
+                    ['lines'].append([db_name + '_disk_size_overhead', 'disk size overhead', 'absolute', 1, 1])
                 self.definitions[db_name + '_database_fragmentation'] \
-                    ['lines'].append([db_name + '_data_size', 'data size', 'stacked', 1, 1])
+                    ['lines'].append([db_name + '_data_size', 'data size', 'absolute', 1, 1])
+
+                self.definitions[db_name + '_database_seq_delta'] = {'options': [], 'lines': []}
+                self.definitions[db_name + '_database_seq_delta'] \
+                    ['options'] = [None, 'Database seq delta', 'seq', 'Database ' + db_name, '', 'line']
+                self.definitions[db_name + '_database_seq_delta'] \
+                    ['lines'].append([db_name + '_committed_db_seq_delta', 'committed seq', 'absolute', 1, 1])
+                self.definitions[db_name + '_database_seq_delta'] \
+                    ['lines'].append([db_name + '_update_db_seq_delta', 'update seq', 'absolute', 1, 1])
 
                 self.definitions[db_name + '_database_seq'] = {'options': [], 'lines': []}
                 self.definitions[db_name + '_database_seq'] \
-                    ['options'] = [None, 'Database seq delta', 'seq', 'Database ' + db_name, '', 'line']
+                    ['options'] = [None, 'Database seq', 'seq', 'Database ' + db_name, '', 'line']
                 self.definitions[db_name + '_database_seq'] \
-                    ['lines'].append([db_name + '_db_seq', 'db seq', 'absolute', 1, 1])
+                    ['lines'].append([db_name + '_committed_db_seq', 'committed seq', 'absolute', 1, 1])
+                self.definitions[db_name + '_database_seq'] \
+                    ['lines'].append([db_name + '_update_db_seq', 'update seq', 'absolute', 1, 1])
 
             return True
 
     def append_new_lines(self, db_name, chart_var, chart_name, repl_type):
 
-        if repl_type == 'push':
-            # meens firts time chart created
-            if db_name + '_push_replication_seq' not in self.order:
-                self.info('adding new lines of push replication task: db_name: %s - chart_var: %s' % (db_name, chart_var))
-                self.order.append(db_name + '_push_replication_seq')
-                self.definitions[db_name + '_push_replication_seq'] = {'options': [], 'lines': []}
-                self.definitions[db_name + '_push_replication_seq'] \
-                    ['options'] = [None, 'Push replications seq', 'seq', 'Database ' + db_name, '', 'line']
+        chart_var_delta = chart_var + '_delta'
+        chart_name_delta = 'delta_' + chart_name
 
-            # can be added even if chart was created previous
-            # must to add lines only
-            self._dimensions.append(str(chart_var))
-            self.definitions[db_name + '_push_replication_seq']['lines'].append(
-                [chart_var, chart_name, 'absolute', 1, 1]
-            )
-        elif repl_type == 'pull':
-            if db_name + '_pull_replication_seq' not in self.order:
-                self.info('adding new lines of pull replication task: db_name: %s - chart_var: %s' % (db_name, chart_var))
-                self.order.append(db_name + '_pull_replication_seq')
-                self.definitions[db_name + '_pull_replication_seq'] = {'options': [], 'lines': []}
-                self.definitions[db_name + '_pull_replication_seq'] \
-                    ['options'] = [None, 'Pull replications seq', 'seq', 'Database ' + db_name, '', 'line']
+        # meens firts time chart created
+        if db_name + '_' + repl_type + '_replication_seq' not in self.order:
+            self.info(
+                'adding new lines of %s replication task: db_name: %s - chart_var: %s' % (repl_type, db_name, chart_var))
+            self.order.append(db_name + '_' + repl_type + '_replication_seq_delta')
+            self.order.append(db_name + '_' + repl_type + '_replication_seq')
 
-            # can be added even if chart was created previous
-            # must to add lines only
-            self._dimensions.append(str(chart_var))
-            self.definitions[db_name + '_pull_replication_seq']['lines'].append(
-                [chart_var, chart_name, 'absolute', 1, 1]
-            )
+            self.definitions[db_name + '_' + repl_type + '_replication_seq_delta'] = {'options': [], 'lines': []}
+            self.definitions[db_name + '_' + repl_type + '_replication_seq'] = {'options': [], 'lines': []}
 
+            self.definitions[db_name + '_' + repl_type + '_replication_seq_delta'] \
+                ['options'] = [None, repl_type + ' replications seq delta', 'seq', 'Database ' + db_name, '', 'line']
+            self.definitions[db_name + '_' + repl_type + '_replication_seq'] \
+                ['options'] = [None, repl_type + ' replications seq', 'seq', 'Database ' + db_name, '', 'line']
+
+
+        # can be added even if chart was created previous
+        # must to add lines only
+        self._dimensions.append(str(chart_var_delta))
+        self._dimensions.append(str(chart_var))
+        self.definitions[db_name + '_' + repl_type + '_replication_seq_delta']['lines'].append(
+            [chart_var_delta, chart_name_delta, 'absolute', 1, 1]
+        )
+        self.definitions[db_name + '_' + repl_type + '_replication_seq']['lines'].append(
+            [chart_var, chart_name, 'absolute', 1, 1]
+        )
         # cant find other solutions
         # self.check()  # if not: wrong dimension id: replication_localhost.first_localhost.second Available dimensions are: indexer_task
         self.create()  # if not: Cannot find dimension with id 'replication_localhost.first_localhost.second'
+
+# s = Service(configuration={'update_every':1,'priority':33333,'retries':60})
+# s.check()
+# s.create()
+# s.update(1)
+# s.run()

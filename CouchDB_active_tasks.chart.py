@@ -66,8 +66,8 @@ class Service(UrlService):
 
         self.untrack_dbs = self.configuration.get('untrack_dbs', ['_replicator', '_users'])
 
-        self.user = self.configuration.get('user') or None
-        self.password = self.configuration.get('pass') or None
+        self.user = self.configuration.get('couch_username') or None
+        self.password = self.configuration.get('couch_password') or None
         if self.user:
             self.base64string = base64.encodestring('%s:%s' % (self.user, self.password)).replace('\n', '')
 
@@ -91,9 +91,11 @@ class Service(UrlService):
                 request.add_header("Authorization", "Basic %s" % self.base64string)
             active_tasks_url = urllib2.urlopen(request).read()
             active_tasks = json.loads(active_tasks_url)
-        except IOError:
+        except IOError as e:
+            self.error(repr(e))
             self.error('Cant connect to couchdb. Check db is running and auth data is correct')
             self.ERROR = True
+            active_tasks = None
         return active_tasks
 
     def _get_data(self):
@@ -153,7 +155,7 @@ class Service(UrlService):
                 if task_name == 'replication':
                     source_host, source_db = get_host_and_db(active_task['source'])
                     target_host, target_db = get_host_and_db(active_task['target'])
-                    chart_var = task_name + '_' + source_host + "." + source_db + '_' + target_host + '.' + target_db
+                    chart_var = task_name + '_' + source_host + ":" + source_db + '_' + target_host + ':' + target_db
                     check_new_data(task_name, chart_var)
                     self.data[chart_var] = active_task['progress']
         return self.data

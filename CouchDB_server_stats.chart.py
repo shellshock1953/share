@@ -179,17 +179,23 @@ class Service(SimpleService):
         # result stored in DELTA{}
         def calc_delta(*args):
             for metric in args:
-                if self.data[metric] is None: self.data[metric] = 0
-                if metric in DELTA:
-                    # prevent negative values
-                    if self.data[metric] < DELTA[metric]:
-                        DELTA[metric] = 0
-                        return None
-                    previous = self.data[metric]
-                    self.data[metric] = self.data[metric] - DELTA[metric]
-                    DELTA[metric] = previous
-                else:
+                if self.data[metric] is None:
+                    self.data[metric] = 0
+
+                # if no such metric in DELTA (first run) -- store it!
+                if metric not in DELTA:
                     DELTA[metric] = self.data[metric]
+
+                # save current untouched value
+                current = self.data[metric]
+
+                # current - previous
+                difference = self.data[metric] - DELTA[metric]
+
+                # prevent negative values (example -- doc deleting)
+                self.data[metric] = difference
+                # save current for future use
+                DELTA[metric] = current
 
         try:
             # get fresh data

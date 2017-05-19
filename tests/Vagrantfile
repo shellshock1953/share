@@ -1,0 +1,19 @@
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+VAGRANTFILE_API_VERSION = "2"
+
+Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
+    config.ssh.insert_key = false
+    config.vm.provider :virtualbox do |vb|
+        vb.customize ["modifyvm", :id, "--memory", "512"]
+    end
+
+    # netdata
+    config.vm.define "netdata" do |netdata|
+        netdata.vm.hostname = "netdata"
+        netdata.vm.box = "fedora/25-cloud-base"
+        netdata.vm.network :private_network, ip: "10.0.0.30"
+		netdata.vm.provision "shell", inline: "sudo dnf install python python-dnf libselinux-python -y"
+    end
+end
+
